@@ -1,0 +1,112 @@
+[
+  {
+    "id": "1",
+    "title": "Interview Scheduled",
+    "message": "Your interview for Frontend Developer at StartupXYZ has been scheduled for February 5th at 2:00 PM.",
+    "type": "interview",
+    "priority": "high",
+    "isRead": false,
+    "createdAt": "2024-02-01T10:30:00Z",
+    "relatedJobId": "2",
+    "actionUrl": "/applications/2"
+  },
+  {
+    "id": "2",
+    "title": "Application Status Update",
+    "message": "Your application for Product Manager at Innovation Labs has been shortlisted. Phone screening scheduled for February 10th.",
+    "type": "application",
+    "priority": "medium",
+    "isRead": false,
+    "createdAt": "2024-02-01T14:15:00Z",
+    "relatedJobId": "6",
+    "actionUrl": "/applications/6"
+  },
+  {
+    "id": "3",
+    "title": "New Job Recommendation",
+    "message": "We found 3 new jobs that match your profile: Senior React Developer at TechStart, Full Stack Engineer at DataCorp, and Mobile Developer at AppWorks.",
+    "type": "recommendation",
+    "priority": "low",
+    "isRead": false,
+    "createdAt": "2024-02-01T16:45:00Z",
+    "relatedJobId": null,
+    "actionUrl": "/jobs"
+  },
+  {
+    "id": "4",
+    "title": "Profile Completion Reminder",
+    "message": "Complete your profile to increase your chances of getting hired. You're currently at 75% completion.",
+    "type": "profile",
+    "priority": "medium",
+    "isRead": true,
+    "createdAt": "2024-01-30T09:00:00Z",
+    "relatedJobId": null,
+    "actionUrl": "/profile"
+  },
+  {
+    "id": "5",
+    "title": "Application Deadline Approaching",
+    "message": "The application deadline for DevOps Engineer at CloudTech Solutions is tomorrow. Don't miss out!",
+    "type": "deadline",
+    "priority": "high",
+    "isRead": false,
+    "createdAt": "2024-02-01T18:00:00Z",
+    "relatedJobId": "5",
+    "actionUrl": "/jobs/5"
+  },
+  {
+    "id": "6",
+    "title": "Interview Preparation Tips",
+    "message": "Get ready for your upcoming interview with our expert tips and common questions for Frontend Developer positions.",
+    "type": "tip",
+    "priority": "low",
+    "isRead": true,
+    "createdAt": "2024-01-31T11:20:00Z",
+    "relatedJobId": "2",
+    "actionUrl": "/resources/interview-tips"
+  },
+  {
+    "id": "7",
+    "title": "Application Rejected",
+    "message": "Unfortunately, your application for UI/UX Designer at Design Studio Pro was not selected for this position.",
+    "type": "rejection",
+    "priority": "medium",
+    "isRead": true,
+    "createdAt": "2024-01-30T15:30:00Z",
+    "relatedJobId": "4",
+    "actionUrl": "/applications/4"
+  },
+  {
+    "id": "8",
+    "title": "Weekly Job Digest",
+    "message": "Here are this week's top job opportunities matching your skills: 12 new positions in React, 8 in Full Stack, and 5 in Mobile Development.",
+    "type": "digest",
+    "priority": "low",
+    "isRead": false,
+    "createdAt": "2024-02-01T08:00:00Z",
+    "relatedJobId": null,
+    "actionUrl": "/jobs"
+  },
+  {
+    "id": "9",
+    "title": "Company Response",
+    "message": "TechCorp Inc. has viewed your application for Senior React Native Developer. They will contact you within 3-5 business days.",
+    "type": "company",
+    "priority": "medium",
+    "isRead": false,
+    "createdAt": "2024-02-01T12:00:00Z",
+    "relatedJobId": "1",
+    "actionUrl": "/applications/1"
+  },
+  {
+    "id": "10",
+    "title": "Skill Assessment Available",
+    "message": "Take our React Native skill assessment to showcase your expertise to employers and increase your visibility.",
+    "type": "assessment",
+    "priority": "low",
+    "isRead": true,
+    "createdAt": "2024-01-29T13:45:00Z",
+    "relatedJobId": null,
+    "actionUrl": "/assessments/react-native"
+  }
+]

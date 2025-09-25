@@ -1,0 +1,152 @@
+[
+  {
+    "id": "1",
+    "jobId": "1",
+    "jobTitle": "Senior React Native Developer",
+    "company": "TechCorp Inc.",
+    "appliedDate": "2024-01-16",
+    "status": "applied",
+    "statusHistory": [
+      {
+        "status": "applied",
+        "date": "2024-01-16",
+        "note": "Application submitted successfully"
+      }
+    ],
+    "nextStep": "Application under review",
+    "interviewDate": null,
+    "notes": "Applied through company website",
+    "salary": "$120,000 - $150,000",
+    "location": "San Francisco, CA"
+  },
+  {
+    "id": "2",
+    "jobId": "2",
+    "jobTitle": "Frontend Developer",
+    "company": "StartupXYZ",
+    "appliedDate": "2024-01-21",
+    "status": "shortlisted",
+    "statusHistory": [
+      {
+        "status": "applied",
+        "date": "2024-01-21",
+        "note": "Application submitted"
+      },
+      {
+        "status": "shortlisted",
+        "date": "2024-01-25",
+        "note": "Application reviewed and shortlisted for interview"
+      }
+    ],
+    "nextStep": "Technical interview scheduled",
+    "interviewDate": "2024-02-05",
+    "notes": "Strong portfolio match",
+    "salary": "$90,000 - $120,000",
+    "location": "New York, NY"
+  },
+  {
+    "id": "3",
+    "jobId": "3",
+    "jobTitle": "Full Stack Developer",
+    "company": "Enterprise Solutions",
+    "appliedDate": "2024-01-19",
+    "status": "interview",
+    "statusHistory": [
+      {
+        "status": "applied",
+        "date": "2024-01-19",
+        "note": "Application submitted"
+      },
+      {
+        "status": "shortlisted",
+        "date": "2024-01-22",
+        "note": "Application shortlisted"
+      },
+      {
+        "status": "interview",
+        "date": "2024-01-26",
+        "note": "Interview scheduled"
+      }
+    ],
+    "nextStep": "Final interview with team lead",
+    "interviewDate": "2024-02-08",
+    "notes": "First interview went well",
+    "salary": "$100,000 - $130,000",
+    "location": "Austin, TX"
+  },
+  {
+    "id": "4",
+    "jobId": "4",
+    "jobTitle": "UI/UX Designer",
+    "company": "Design Studio Pro",
+    "appliedDate": "2024-01-23",
+    "status": "rejected",
+    "statusHistory": [
+      {
+        "status": "applied",
+        "date": "2024-01-23",
+        "note": "Application submitted"
+      },
+      {
+        "status": "shortlisted",
+        "date": "2024-01-26",
+        "note": "Application reviewed"
+      },
+      {
+        "status": "rejected",
+        "date": "2024-01-30",
+        "note": "Not selected for this position"
+      }
+    ],
+    "nextStep": "Application closed",
+    "interviewDate": null,
+    "notes": "Portfolio didn't match requirements",
+    "salary": "$80,000 - $100,000",
+    "location": "Los Angeles, CA"
+  },
+  {
+    "id": "5",
+    "jobId": "5",
+    "jobTitle": "DevOps Engineer",
+    "company": "CloudTech Solutions",
+    "appliedDate": "2024-01-26",
+    "status": "applied",
+    "statusHistory": [
+      {
+        "status": "applied",
+        "date": "2024-01-26",
+        "note": "Application submitted"
+      }
+    ],
+    "nextStep": "Application under review",
+    "interviewDate": null,
+    "notes": "Applied through LinkedIn",
+    "salary": "$110,000 - $140,000",
+    "location": "Seattle, WA"
+  },
+  {
+    "id": "6",
+    "jobId": "6",
+    "jobTitle": "Product Manager",
+    "company": "Innovation Labs",
+    "appliedDate": "2024-01-29",
+    "status": "shortlisted",
+    "statusHistory": [
+      {
+        "status": "applied",
+        "date": "2024-01-29",
+        "note": "Application submitted"
+      },
+      {
+        "status": "shortlisted",
+        "date": "2024-02-01",
+        "note": "Application shortlisted for next round"
+      }
+    ],
+    "nextStep": "Phone screening scheduled",
+    "interviewDate": "2024-02-10",
+    "notes": "Strong product experience",
+    "salary": "$130,000 - $160,000",
+    "location": "Boston, MA"
+  }
+]
