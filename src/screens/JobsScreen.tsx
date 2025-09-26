@@ -8,7 +8,7 @@ import { Colors } from '../constants/colors';
 import { Sizes } from '../constants/sizes';
 import JobCard from '../components/JobCard';
 import SearchBar from '../components/SearchBar';
-import FilterJobsScreen from './FilterJobsScreen';
+import SimpleFilterModal from '../components/SimpleFilterModal';
 import { Job, FilterOptions } from '../types';
 import jobsData from '../data/jobs.json';
 
@@ -580,12 +580,12 @@ const JobsScreen: React.FC<JobsScreenProps> = ({ navigation }) => {
         </View>
       </ScrollView>
 
-      {/* Enhanced Filter Modal */}
-      <FilterJobsScreen
+      {/* Simple Filter Modal */}
+      <SimpleFilterModal
         visible={showFilters}
         onDismiss={() => setShowFilters(false)}
         onApply={handleFilterApply}
-        initialFilters={filters}
+        filters={filters}
       />
 
       {/* FAB */}
