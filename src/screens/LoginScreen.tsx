@@ -1,47 +1,25 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
-import { Text, TextInput, Button, useTheme, Divider } from 'react-native-paper';
+import { View, StyleSheet, ScrollView, Image, TouchableOpacity, Alert } from 'react-native';
+import { Text, TextInput, Button, useTheme } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
-  withSpring,
-  withTiming 
-} from 'react-native-reanimated';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useApp } from '../context/AppContext';
 import { Colors } from '../constants/colors';
-import { Sizes } from '../constants/sizes';
-import profileData from '../data/profile.json';
 
 const LoginScreen: React.FC = () => {
   const theme = useTheme();
   const { state, login, navigateToScreen } = useApp();
   const isDark = state.theme === 'dark';
-  
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  
-  const logoScale = useSharedValue(0);
-  const formOpacity = useSharedValue(0);
-
-  React.useEffect(() => {
-    logoScale.value = withSpring(1, { damping: 15, stiffness: 300 });
-    formOpacity.value = withTiming(1, { duration: 600 });
-  }, []);
-
-  const logoAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: logoScale.value }],
-  }));
-
-  const formAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: formOpacity.value,
-  }));
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async () => {
     if (!email || !password) {
+      Alert.alert('Error', 'Please fill in all fields');
       return;
     }
 
@@ -49,23 +27,58 @@ const LoginScreen: React.FC = () => {
     
     // Simulate API call
     setTimeout(() => {
-      // For demo purposes, login with any email/password
-      login(profileData as any);
+      login({
+        id: '1',
+        personalInfo: {
+          firstName: 'John',
+          lastName: 'Doe',
+          email: email,
+          phone: '+1234567890',
+          location: 'New York, NY',
+          profileImage: '',
+          bio: 'Software Developer',
+        },
+        professionalInfo: {
+          title: 'Software Developer',
+          experience: '5 years',
+          skills: ['React', 'Node.js', 'TypeScript'],
+          availability: 'Full-time',
+          expectedSalary: '$80,000 - $100,000',
+          workType: ['Remote'],
+          languages: [{ language: 'English', proficiency: 'Native' }],
+        },
+        education: [],
+        experience: [],
+        projects: [],
+        certifications: [],
+        resume: {
+          fileName: '',
+          fileSize: '',
+          uploadDate: '',
+          url: '',
+        },
+        preferences: {
+          jobTypes: ['Full-time'],
+          workArrangement: ['Remote'],
+          industries: ['Technology'],
+          companySize: ['Medium'],
+          notificationSettings: {
+            emailNotifications: true,
+            pushNotifications: true,
+            jobMatches: true,
+            applicationUpdates: true,
+            weeklyDigest: true,
+          },
+        },
+        profileCompletion: 75,
+        lastUpdated: new Date().toISOString(),
+      });
       setIsLoading(false);
     }, 1500);
   };
 
-  const handleDemoLogin = () => {
-    setEmail('demo@example.com');
-    setPassword('demo123');
-    handleLogin();
-  };
-
   return (
-    <SafeAreaView style={[
-      styles.container,
-      { backgroundColor: isDark ? Colors.background : Colors.background }
-    ]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? '#1A1A1A' : '#FFFFFF' }]}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
       
       <ScrollView 
@@ -73,166 +86,110 @@ const LoginScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <Animated.View style={[styles.logoContainer, logoAnimatedStyle]}>
-          <View style={[
-            styles.logo,
-            { backgroundColor: isDark ? Colors.primary : Colors.primary }
-          ]}>
-            <Text 
-              variant="displaySmall" 
-              style={[styles.logoText, { color: Colors.white }]}
-            >
-              MCB
-            </Text>
-          </View>
-          <Text 
-            variant="headlineSmall" 
-            style={[
-              styles.title,
-              { color: isDark ? Colors.white : Colors.textPrimary }
-            ]}
-          >
+        {/* Header */}
+        <View style={styles.header}>
+          <Image 
+            source={require('../../assets/logoJob.png')} 
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <Text style={[styles.title, { color: isDark ? '#FFFFFF' : '#1A1A1A' }]}>
             Welcome Back
           </Text>
-          <Text 
-            variant="bodyLarge" 
-            style={[
-              styles.subtitle,
-              { color: isDark ? Colors.gray : Colors.textSecondary }
-            ]}
-          >
+          <Text style={[styles.subtitle, { color: isDark ? '#B0B0B0' : '#666666' }]}>
             Sign in to continue your career journey
           </Text>
-        </Animated.View>
+        </View>
 
-        <Animated.View style={[styles.formContainer, formAnimatedStyle]}>
-          <TextInput
-            label="Email"
-            value={email}
-            onChangeText={setEmail}
-            mode="outlined"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoComplete="email"
-            style={styles.input}
-            contentStyle={[
-              styles.inputContent,
-              { color: isDark ? Colors.white : Colors.textPrimary }
-            ]}
-            outlineStyle={[
-              styles.inputOutline,
-              { borderColor: isDark ? Colors.border : Colors.borderLight }
-            ]}
-            theme={{
-              colors: {
-                primary: isDark ? Colors.primary : Colors.primary,
-                onSurface: isDark ? Colors.white : Colors.textPrimary,
-                outline: isDark ? Colors.border : Colors.borderLight,
-              }
-            }}
-            accessibilityLabel="Email address"
-            accessibilityHint="Enter your email address"
-          />
+        {/* Form */}
+        <View style={styles.form}>
+          <View style={styles.inputContainer}>
+            <Text style={[styles.label, { color: isDark ? '#FFFFFF' : '#1A1A1A' }]}>
+              Email Address
+            </Text>
+            <TextInput
+              value={email}
+              onChangeText={setEmail}
+              placeholder="Enter your email"
+              placeholderTextColor={isDark ? '#666666' : '#999999'}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              style={[
+                styles.input,
+                { 
+                  backgroundColor: isDark ? '#2A2A2A' : '#F8F9FA',
+                  borderColor: isDark ? '#404040' : '#E1E5E9',
+                  color: isDark ? '#FFFFFF' : '#1A1A1A'
+                }
+              ]}
+            />
+          </View>
 
-          <TextInput
-            label="Password"
-            value={password}
-            onChangeText={setPassword}
-            mode="outlined"
-            secureTextEntry={!showPassword}
-            autoComplete="password"
-            style={styles.input}
-            contentStyle={[
-              styles.inputContent,
-              { color: isDark ? Colors.white : Colors.textPrimary }
-            ]}
-            outlineStyle={[
-              styles.inputOutline,
-              { borderColor: isDark ? Colors.border : Colors.borderLight }
-            ]}
-            right={
-              <TextInput.Icon
-                icon={showPassword ? 'eye-off' : 'eye'}
-                onPress={() => setShowPassword(!showPassword)}
-                accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+          <View style={styles.inputContainer}>
+            <Text style={[styles.label, { color: isDark ? '#FFFFFF' : '#1A1A1A' }]}>
+              Password
+            </Text>
+            <View style={styles.passwordContainer}>
+              <TextInput
+                value={password}
+                onChangeText={setPassword}
+                placeholder="Enter your password"
+                placeholderTextColor={isDark ? '#666666' : '#999999'}
+                secureTextEntry={!showPassword}
+                style={[
+                  styles.passwordInput,
+                  { 
+                    backgroundColor: isDark ? '#2A2A2A' : '#F8F9FA',
+                    borderColor: isDark ? '#404040' : '#E1E5E9',
+                    color: isDark ? '#FFFFFF' : '#1A1A1A'
+                  }
+                ]}
               />
-            }
-            theme={{
-              colors: {
-                primary: isDark ? Colors.primary : Colors.primary,
-                onSurface: isDark ? Colors.white : Colors.textPrimary,
-                outline: isDark ? Colors.border : Colors.borderLight,
-              }
-            }}
-            accessibilityLabel="Password"
-            accessibilityHint="Enter your password"
-          />
+              <TouchableOpacity
+                style={styles.eyeIcon}
+                onPress={() => setShowPassword(!showPassword)}
+              >
+                <MaterialCommunityIcons
+                  name={showPassword ? 'eye-off' : 'eye'}
+                  size={20}
+                  color={isDark ? '#B0B0B0' : '#666666'}
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
 
-          <Button
-            mode="text"
-            onPress={() => {}}
-            style={styles.forgotPassword}
-            textColor={isDark ? Colors.primary : Colors.primary}
-          >
-            Forgot Password?
-          </Button>
+          <TouchableOpacity style={styles.forgotPassword}>
+            <Text style={[styles.forgotPasswordText, { color: '#3B82F6' }]}>
+              Forgot Password?
+            </Text>
+          </TouchableOpacity>
 
-          <Button
-            mode="contained"
+          <TouchableOpacity
+            style={[
+              styles.loginButton,
+              { backgroundColor: '#3B82F6' },
+              isLoading && styles.loginButtonDisabled
+            ]}
             onPress={handleLogin}
-            loading={isLoading}
-            disabled={!email || !password || isLoading}
-            style={styles.loginButton}
-            buttonColor={isDark ? Colors.primary : Colors.primary}
-            contentStyle={styles.buttonContent}
+            disabled={isLoading}
           >
-            {isLoading ? 'Signing In...' : 'Sign In'}
-          </Button>
-
-          <View style={styles.dividerContainer}>
-            <Divider style={styles.divider} />
-            <Text 
-              variant="bodyMedium" 
-              style={[
-                styles.dividerText,
-                { color: isDark ? Colors.gray : Colors.textSecondary }
-              ]}
-            >
-              OR
+            <Text style={styles.loginButtonText}>
+              {isLoading ? 'Signing In...' : 'Sign In'}
             </Text>
-            <Divider style={styles.divider} />
-          </View>
+          </TouchableOpacity>
+        </View>
 
-          <Button
-            mode="outlined"
-            onPress={handleDemoLogin}
-            style={styles.demoButton}
-            textColor={isDark ? Colors.primary : Colors.primary}
-            contentStyle={styles.buttonContent}
-          >
-            Demo Login
-          </Button>
-
-          <View style={styles.signupContainer}>
-            <Text 
-              variant="bodyMedium" 
-              style={[
-                styles.signupText,
-                { color: isDark ? Colors.gray : Colors.textSecondary }
-              ]}
-            >
-              Don't have an account?{' '}
-            </Text>
-            <Button
-              mode="text"
-              onPress={() => navigateToScreen('signup')}
-              textColor={isDark ? Colors.primary : Colors.primary}
-              style={styles.signupButton}
-            >
+        {/* Footer */}
+        <View style={styles.footer}>
+          <Text style={[styles.footerText, { color: isDark ? '#B0B0B0' : '#666666' }]}>
+            Don't have an account?{' '}
+          </Text>
+          <TouchableOpacity onPress={() => navigateToScreen('signup')}>
+            <Text style={[styles.signupLink, { color: '#3B82F6' }]}>
               Sign Up
-            </Button>
-          </View>
-        </Animated.View>
+            </Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -244,91 +201,108 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: Sizes.lg,
+    paddingHorizontal: 24,
   },
-  logoContainer: {
+  header: {
     alignItems: 'center',
-    paddingTop: Sizes.xxl,
-    paddingBottom: Sizes.xl,
+    paddingTop: 60,
+    paddingBottom: 40,
   },
   logo: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: Sizes.lg,
-    elevation: Sizes.elevation3,
-    shadowColor: Colors.shadow,
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-  },
-  logoText: {
-    fontWeight: 'bold',
-    letterSpacing: 1,
+    width: 120,
+    height: 60,
+    marginBottom: 32,
   },
   title: {
-    fontWeight: 'bold',
-    marginBottom: Sizes.sm,
+    fontSize: 28,
+    fontWeight: '700',
+    marginBottom: 8,
+    textAlign: 'center',
   },
   subtitle: {
+    fontSize: 16,
     textAlign: 'center',
     lineHeight: 24,
   },
-  formContainer: {
+  form: {
     flex: 1,
-    paddingBottom: Sizes.xl,
+    paddingBottom: 40,
+  },
+  inputContainer: {
+    marginBottom: 24,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
   },
   input: {
-    marginBottom: Sizes.md,
+    height: 56,
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingHorizontal: 16,
+    fontSize: 16,
   },
-  inputContent: {
-    fontSize: Sizes.fontSizeMd,
+  passwordContainer: {
+    position: 'relative',
   },
-  inputOutline: {
-    borderRadius: Sizes.radiusMd,
+  passwordInput: {
+    height: 56,
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingHorizontal: 16,
+    paddingRight: 50,
+    fontSize: 16,
+  },
+  eyeIcon: {
+    position: 'absolute',
+    right: 16,
+    top: 18,
+    padding: 4,
   },
   forgotPassword: {
     alignSelf: 'flex-end',
-    marginBottom: Sizes.xl,
+    marginBottom: 32,
   },
-  loginButton: {
-    borderRadius: Sizes.radiusMd,
-    marginBottom: Sizes.lg,
-  },
-  buttonContent: {
-    paddingVertical: Sizes.sm,
-  },
-  dividerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: Sizes.lg,
-  },
-  divider: {
-    flex: 1,
-  },
-  dividerText: {
-    marginHorizontal: Sizes.md,
+  forgotPasswordText: {
+    fontSize: 14,
     fontWeight: '500',
   },
-  demoButton: {
-    borderRadius: Sizes.radiusMd,
-    marginBottom: Sizes.xl,
+  loginButton: {
+    height: 56,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
-  signupContainer: {
+  loginButtonDisabled: {
+    opacity: 0.7,
+  },
+  loginButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  footer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    paddingTop: 32,
+    paddingBottom: 20,
   },
-  signupText: {
-    // Additional styles if needed
+  footerText: {
+    fontSize: 16,
   },
-  signupButton: {
-    // Additional styles if needed
+  signupLink: {
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

@@ -1,37 +1,40 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Image } from 'react-native';
-import { Card, Text, Chip, IconButton, useTheme, Button } from 'react-native-paper';
+import { View, StyleSheet, TouchableOpacity, Image, Dimensions, Alert } from 'react-native';
+import { Card, Text, Chip, IconButton, useTheme, Button, ProgressBar } from 'react-native-paper';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
-  withSpring,
-  withSequence,
+  withSpring, 
   withTiming,
-  withDelay,
+  interpolate,
   runOnJS
 } from 'react-native-reanimated';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Job } from '../types';
 import { useApp } from '../context/AppContext';
 import { Colors } from '../constants/colors';
 import { Sizes } from '../constants/sizes';
 
+const { width: screenWidth } = Dimensions.get('window');
+
 interface JobCardProps {
   job: Job;
+  onApply?: () => void;
   onPress?: () => void;
   onSave?: () => void;
-  onApply?: () => void;
+  onShare?: () => void;
   showSaveButton?: boolean;
-  showApplyButton?: boolean;
+  matchPercentage?: number;
 }
 
 const JobCard: React.FC<JobCardProps> = ({ 
   job, 
-  onPress, 
-  onSave, 
   onApply,
+  onPress,
+  onSave,
+  onShare,
   showSaveButton = true,
-  showApplyButton = true 
+  matchPercentage = Math.floor(Math.random() * 40) + 60 // Random match between 60-100%
 }) => {
   const theme = useTheme();
   const { state, saveJob, unsaveJob } = useApp();
@@ -40,44 +43,20 @@ const JobCard: React.FC<JobCardProps> = ({
   const isApplied = state.appliedJobs.includes(job.id);
   
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
+  const [showQuickActions, setShowQuickActions] = useState(false);
   
-  const scale = useSharedValue(1);
-  const saveScale = useSharedValue(1);
-  const applyScale = useSharedValue(1);
-  const successOpacity = useSharedValue(0);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
-  const saveAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: saveScale.value }],
-  }));
-
-  const applyAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: applyScale.value }],
-  }));
-
-  const successAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: successOpacity.value,
-    transform: [{ scale: successOpacity.value }],
-  }));
+  // Animation values
+  const scaleValue = useSharedValue(1);
+  const quickActionsOpacity = useSharedValue(0);
 
   const handlePress = () => {
-    scale.value = withSequence(
-      withTiming(0.95, { duration: 100 }),
-      withSpring(1, { damping: 15, stiffness: 300 })
-    );
+    scaleValue.value = withSpring(0.98, {}, () => {
+      scaleValue.value = withSpring(1);
+    });
     onPress?.();
   };
 
   const handleSave = () => {
-    saveScale.value = withSequence(
-      withTiming(0.8, { duration: 100 }),
-      withSpring(1.2, { damping: 8, stiffness: 200 }),
-      withSpring(1, { damping: 15, stiffness: 300 })
-    );
-    
     if (isSaved) {
       unsaveJob(job.id);
     } else {
@@ -87,28 +66,41 @@ const JobCard: React.FC<JobCardProps> = ({
     onSave?.();
   };
 
+  const handleShare = () => {
+    Alert.alert('Share Job', `Share ${job.title} at ${job.company}?`, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Share', onPress: () => onShare?.() }
+    ]);
+  };
+
   const showSuccess = () => {
     setShowSuccessAnimation(true);
-    successOpacity.value = withSequence(
-      withTiming(1, { duration: 300 }),
-      withDelay(1500, withTiming(0, { duration: 300 }))
-    );
-    
     setTimeout(() => {
       setShowSuccessAnimation(false);
     }, 2000);
   };
 
   const handleApply = () => {
-    applyScale.value = withSequence(
-      withTiming(0.9, { duration: 100 }),
-      withSpring(1.1, { damping: 8, stiffness: 200 }),
-      withSpring(1, { damping: 15, stiffness: 300 })
-    );
-    
-    runOnJS(showSuccess)();
+    showSuccess();
     onApply?.();
   };
+
+  const toggleQuickActions = () => {
+    setShowQuickActions(!showQuickActions);
+    quickActionsOpacity.value = withTiming(showQuickActions ? 0 : 1, { duration: 200 });
+  };
+
+  // Animated styles
+  const animatedCardStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scaleValue.value }],
+  }));
+
+  const animatedQuickActionsStyle = useAnimatedStyle(() => ({
+    opacity: quickActionsOpacity.value,
+    transform: [
+      { translateY: interpolate(quickActionsOpacity.value, [0, 1], [10, 0]) }
+    ],
+  }));
 
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
@@ -137,190 +129,206 @@ const JobCard: React.FC<JobCardProps> = ({
   };
 
   return (
-    <Animated.View style={animatedStyle}>
+    <Animated.View style={animatedCardStyle}>
       <Card style={[
         styles.card,
         { 
-          backgroundColor: isDark ? Colors.darkGray : Colors.white,
+          backgroundColor: isDark ? Colors.darkGray : '#FFFFFF',
           borderLeftWidth: job.isUrgent ? 4 : 0,
           borderLeftColor: job.isUrgent ? '#F44336' : 'transparent'
         }
       ]}>
-        <Card.Content style={styles.content}>
-          <TouchableOpacity onPress={handlePress} style={styles.touchable}>
-            {/* Header */}
-            <View style={styles.header}>
-              <View style={styles.jobInfo}>
+        <TouchableOpacity onPress={handlePress} activeOpacity={0.9}>
+          <Card.Content style={styles.content}>
+          {/* Header with Job Info and Logo */}
+          <View style={styles.header}>
+            <View style={styles.companyInfo}>
+              <View style={styles.titleRow}>
                 <Text 
                   variant="titleMedium" 
                   style={[
                     styles.jobTitle,
-                    { color: isDark ? Colors.white : Colors.textPrimary }
+                    { color: isDark ? Colors.white : '#1A1A1A' }
                   ]}
+                  numberOfLines={2}
                 >
                   {job.title}
                 </Text>
-                <Text 
-                  variant="bodyMedium" 
-                  style={[
-                    styles.companyName,
-                    { color: isDark ? Colors.gray : Colors.textSecondary }
-                  ]}
-                >
-                  {job.company}
-                </Text>
+                {/* Match Percentage */}
+                <View style={styles.matchContainer}>
+                  <Text variant="bodySmall" style={styles.matchText}>
+                    {matchPercentage}% match
+                  </Text>
+                  <ProgressBar 
+                    progress={matchPercentage / 100} 
+                    color="#4CAF50"
+                    style={styles.matchBar}
+                  />
+                </View>
               </View>
-              
-              <View style={styles.headerRight}>
-                {job.isUrgent && (
-                  <Chip 
-                    style={styles.urgentChip}
-                    textStyle={styles.urgentChipText}
-                    icon={() => <MaterialCommunityIcons name="alert-circle" size={12} color="white" />}
-                  >
-                    Urgent
-                  </Chip>
-                )}
-                
-                {showSaveButton && (
-                  <Animated.View style={saveAnimatedStyle}>
-                    <IconButton
-                      icon={() => (
-                        <MaterialCommunityIcons 
-                          name={isSaved ? "bookmark" : "bookmark-outline"} 
-                          size={24} 
-                          color={isSaved ? "#1976D2" : "#B0BEC5"} 
-                        />
-                      )}
-                      onPress={handleSave}
-                      style={styles.saveButton}
-                    />
-                  </Animated.View>
-                )}
-              </View>
-            </View>
-
-            {/* Job Details */}
-            <View style={styles.details}>
-              <View style={styles.detailRow}>
-                <MaterialCommunityIcons 
-                  name="map-marker" 
-                  size={16} 
-                  color={isDark ? Colors.gray : Colors.textSecondary} 
-                />
-                <Text 
-                  variant="bodySmall" 
-                  style={[
-                    styles.detailText,
-                    { color: isDark ? Colors.gray : Colors.textSecondary }
-                  ]}
-                >
-                  {job.location}
-                </Text>
-              </View>
-
-              <View style={styles.detailRow}>
-                <MaterialCommunityIcons 
-                  name="currency-usd" 
-                  size={16} 
-                  color="#4CAF50" 
-                />
-                <Text 
-                  variant="bodySmall" 
-                  style={[styles.detailText, styles.salaryText]}
-                >
-                  {job.salary}
-                </Text>
-              </View>
-
-              <View style={styles.detailRow}>
-                <MaterialCommunityIcons 
-                  name="clock-outline" 
-                  size={16} 
-                  color={isDark ? Colors.gray : Colors.textSecondary} 
-                />
-                <Text 
-                  variant="bodySmall" 
-                  style={[
-                    styles.detailText,
-                    { color: isDark ? Colors.gray : Colors.textSecondary }
-                  ]}
-                >
-                  {formatDate(job.postedDate)}
-                </Text>
-              </View>
-            </View>
-
-            {/* Tags */}
-            <View style={styles.tagsContainer}>
-              <Chip 
-                style={[styles.typeChip, { backgroundColor: getJobTypeColor(job.type) + '20' }]}
-                textStyle={[styles.typeChipText, { color: getJobTypeColor(job.type) }]}
+              <Text 
+                variant="bodyMedium" 
+                style={[
+                  styles.companyName,
+                  { color: isDark ? Colors.gray : '#666666' }
+                ]}
+                numberOfLines={1}
               >
-                {job.type}
-              </Chip>
-              
-              {job.isRemote && (
+                {job.company}
+              </Text>
+            </View>
+            
+            <View style={styles.headerRight}>
+              <View style={styles.logoContainer}>
+                <Image 
+                  source={{ uri: job.companyLogo }} 
+                  style={styles.companyLogo}
+                  accessibilityLabel={`${job.company} logo`}
+                />
+                {!job.companyLogo && (
+                  <View style={styles.logoPlaceholder}>
+                    <Text style={styles.logoText}>
+                      {job.company.charAt(0).toUpperCase()}
+                    </Text>
+                  </View>
+                )}
+              </View>
+              {job.isUrgent && (
                 <Chip 
-                  style={styles.remoteChip}
-                  textStyle={styles.remoteChipText}
-                  icon={() => <MaterialCommunityIcons name="home" size={12} color="#9C27B0" />}
+                  style={styles.urgentChip}
+                  textStyle={styles.urgentChipText}
+                  icon={() => <MaterialCommunityIcons name="alert-circle" size={12} color="white" />}
                 >
-                  Remote
+                  Urgent
                 </Chip>
               )}
-              
+            </View>
+          </View>
+
+          {/* Job Details - Location and Salary */}
+          <View style={styles.detailsContainer}>
+            <View style={styles.detailRow}>
+              <MaterialCommunityIcons 
+                name="map-marker" 
+                size={16} 
+                color="#B0BEC5" 
+              />
+              <Text 
+                variant="bodySmall" 
+                style={[
+                  styles.detailText,
+                  { color: '#B0BEC5' }
+                ]}
+                numberOfLines={1}
+              >
+                {job.location}
+              </Text>
+            </View>
+
+            <View style={styles.detailRow}>
+              <MaterialCommunityIcons 
+                name="currency-usd" 
+                size={16} 
+                color="#4CAF50" 
+              />
+              <Text 
+                variant="bodySmall" 
+                style={[styles.detailText, styles.salaryText]}
+                numberOfLines={1}
+              >
+                {job.salary}
+              </Text>
+            </View>
+          </View>
+
+          {/* Skills Tags and Action Buttons */}
+          <View style={styles.bottomSection}>
+            <View style={styles.skillsContainer}>
               {job.tags.slice(0, 2).map((tag, index) => (
                 <Chip 
                   key={index}
-                  style={styles.tagChip}
-                  textStyle={styles.tagChipText}
+                  style={styles.skillChip}
+                  textStyle={styles.skillChipText}
                 >
                   {tag}
                 </Chip>
               ))}
-            </View>
-          </TouchableOpacity>
-
-          {/* Action Buttons */}
-          <View style={styles.actions}>
-            {showApplyButton && (
-              <Animated.View style={applyAnimatedStyle}>
-                <Button
-                  mode={isApplied ? "outlined" : "contained"}
-                  onPress={handleApply}
-                  style={[
-                    styles.applyButton,
-                    isApplied && styles.appliedButton
-                  ]}
-                  buttonColor={isApplied ? undefined : "#1976D2"}
-                  textColor={isApplied ? "#1976D2" : "white"}
-                  icon={() => (
-                    <MaterialCommunityIcons 
-                      name={isApplied ? "check" : "file-send-outline"} 
-                      size={16} 
-                      color={isApplied ? "#1976D2" : "white"} 
-                    />
-                  )}
+              {job.tags.length > 2 && (
+                <Chip 
+                  style={styles.moreChip}
+                  textStyle={styles.moreChipText}
                 >
-                  {isApplied ? "Applied" : "Apply Now"}
-                </Button>
-              </Animated.View>
-            )}
+                  +{job.tags.length - 2}
+                </Chip>
+              )}
+            </View>
+
+            <View style={styles.actionButtons}>
+              <Button
+                mode="contained"
+                onPress={handleApply}
+                style={styles.applyButton}
+                buttonColor="#3b82f6"
+                textColor="white"
+                compact
+              >
+                {isApplied ? "Applied" : "Apply"}
+              </Button>
+              
+              <TouchableOpacity onPress={toggleQuickActions} style={styles.moreButton}>
+                <MaterialCommunityIcons 
+                  name="dots-vertical" 
+                  size={20} 
+                  color="#666666" 
+                />
+              </TouchableOpacity>
+            </View>
           </View>
+
+          {/* Quick Actions */}
+          {showQuickActions && (
+            <Animated.View style={[styles.quickActions, animatedQuickActionsStyle]}>
+              <TouchableOpacity 
+                style={styles.quickActionButton}
+                onPress={handleSave}
+              >
+                <MaterialCommunityIcons 
+                  name={isSaved ? "bookmark" : "bookmark-outline"} 
+                  size={20} 
+                  color="#3b82f6" 
+                />
+                <Text style={styles.quickActionText}>
+                  {isSaved ? "Saved" : "Save"}
+                </Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.quickActionButton}
+                onPress={handleShare}
+              >
+                <MaterialCommunityIcons 
+                  name="share-variant" 
+                  size={20} 
+                  color="#3b82f6" 
+                />
+                <Text style={styles.quickActionText}>Share</Text>
+              </TouchableOpacity>
+            </Animated.View>
+          )}
 
           {/* Success Animation Overlay */}
           {showSuccessAnimation && (
-            <Animated.View style={[styles.successOverlay, successAnimatedStyle]}>
+            <View style={styles.successOverlay}>
               <View style={styles.successContent}>
                 <MaterialCommunityIcons name="check-circle" size={48} color="#4CAF50" />
                 <Text variant="titleMedium" style={styles.successText}>
                   Application Sent!
                 </Text>
               </View>
-            </Animated.View>
+            </View>
           )}
-        </Card.Content>
+          </Card.Content>
+        </TouchableOpacity>
       </Card>
     </Animated.View>
   );
@@ -335,11 +343,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     marginBottom: 12,
+    backgroundColor: '#FFFFFF',
   },
   content: {
-    padding: 0,
-  },
-  touchable: {
     padding: 16,
   },
   header: {
@@ -348,16 +354,65 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: 12,
   },
-  jobInfo: {
+  companyInfo: {
     flex: 1,
     marginRight: 12,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 4,
+  },
+  matchContainer: {
+    alignItems: 'flex-end',
+    minWidth: 80,
+  },
+  matchText: {
+    fontSize: 10,
+    color: '#4CAF50',
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  matchBar: {
+    width: 60,
+    height: 3,
+    borderRadius: 2,
+  },
+  logoContainer: {
+    position: 'relative',
+  },
+  companyLogo: {
+    width: 48,
+    height: 48,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  logoPlaceholder: {
+    width: 48,
+    height: 48,
+    borderRadius: 8,
+    backgroundColor: '#E3F2FD',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  logoText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1976D2',
+  },
+  jobInfo: {
+    flex: 1,
   },
   jobTitle: {
     fontWeight: '600',
     marginBottom: 4,
+    color: '#1A1A1A',
   },
   companyName: {
-    opacity: 0.8,
+    color: '#666666',
+    marginBottom: 4,
   },
   headerRight: {
     alignItems: 'flex-end',
@@ -375,66 +430,86 @@ const styles = StyleSheet.create({
   saveButton: {
     margin: 0,
   },
-  details: {
+  detailsContainer: {
     marginBottom: 12,
   },
   detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 4,
   },
   detailText: {
-    marginLeft: 8,
+    marginLeft: 4,
     flex: 1,
   },
   salaryText: {
     color: '#4CAF50',
     fontWeight: '600',
   },
-  tagsContainer: {
+  bottomSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  moreButton: {
+    padding: 8,
+    marginLeft: 8,
+  },
+  quickActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+    marginTop: 8,
+  },
+  quickActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 8,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 8,
+    marginHorizontal: 4,
+  },
+  quickActionText: {
+    marginLeft: 4,
+    fontSize: 12,
+    color: '#3b82f6',
+    fontWeight: '500',
+  },
+  skillsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 16,
+    flex: 1,
+    gap: 6,
   },
-  typeChip: {
-    marginRight: 6,
-    marginBottom: 4,
-    height: 24,
+  skillChip: {
+    backgroundColor: '#dbeafe',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
   },
-  typeChipText: {
-    fontSize: 10,
-    fontWeight: '600',
+  skillChipText: {
+    color: '#3b82f6',
+    fontSize: 12,
+    fontWeight: '500',
   },
-  remoteChip: {
-    backgroundColor: '#E1BEE7',
-    marginRight: 6,
-    marginBottom: 4,
-    height: 24,
+  moreChip: {
+    backgroundColor: '#f3f4f6',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
   },
-  remoteChipText: {
-    fontSize: 10,
-    color: '#9C27B0',
-    fontWeight: '600',
-  },
-  tagChip: {
-    backgroundColor: '#E3F2FD',
-    marginRight: 6,
-    marginBottom: 4,
-    height: 24,
-  },
-  tagChipText: {
-    fontSize: 10,
-    color: '#1976D2',
-  },
-  actions: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
+  moreChipText: {
+    color: '#6b7280',
+    fontSize: 12,
+    fontWeight: '500',
   },
   applyButton: {
     borderRadius: 8,
-  },
-  appliedButton: {
-    borderColor: '#1976D2',
+    marginLeft: 12,
   },
   successOverlay: {
     position: 'absolute',

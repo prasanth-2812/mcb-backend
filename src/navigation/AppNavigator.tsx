@@ -13,6 +13,8 @@ import SignupScreen from '../screens/SignupScreen';
 import HomeScreen from '../screens/HomeScreen';
 import JobsScreen from '../screens/JobsScreen';
 import JobDetailsScreen from '../screens/JobDetailsScreen';
+import JobDetailsPage from '../screens/JobDetailsPage';
+import ApplicationPage from '../screens/ApplicationPage';
 import ApplicationsScreen from '../screens/ApplicationsScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
@@ -94,58 +96,82 @@ const MainTabNavigator = () => {
 };
 
 const AppNavigator = () => {
+  const { state } = useApp();
+
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Auth" component={AuthNavigator} />
-        <Stack.Screen 
-          name="SavedJobs" 
-          component={SavedJobsScreen}
-          options={{ 
-            title: 'Saved Jobs',
-            headerShown: true,
-            headerStyle: {
-              backgroundColor: '#F9F9F9',
-            },
-            headerTintColor: '#1A1A1A',
-            headerTitleStyle: {
-              fontWeight: '600',
-              fontSize: 18,
-            },
-          }}
-        />
-        <Stack.Screen 
-          name="JobDetails" 
-          component={JobDetailsScreen as any}
-          options={{ 
-            title: 'Job Details',
-            headerShown: true,
-            headerStyle: {
-              backgroundColor: '#F9F9F9',
-            },
-            headerTintColor: '#1A1A1A',
-            headerTitleStyle: {
-              fontWeight: '600',
-              fontSize: 18,
-            },
-          }}
-        />
-        <Stack.Screen 
-          name="ResumeBuilder" 
-          component={ResumeBuilderScreen}
-          options={{ 
-            title: 'Resume Builder',
-            headerShown: true,
-            headerStyle: {
-              backgroundColor: '#F9F9F9',
-            },
-            headerTintColor: '#1A1A1A',
-            headerTitleStyle: {
-              fontWeight: '600',
-              fontSize: 18,
-            },
-          }}
-        />
+        {state.isAuthenticated ? (
+          <>
+            <Stack.Screen name="Main" component={MainTabNavigator} />
+            <Stack.Screen 
+              name="SavedJobs" 
+              component={SavedJobsScreen}
+              options={{ 
+                title: 'Saved Jobs',
+                headerShown: true,
+                headerStyle: {
+                  backgroundColor: '#F9F9F9',
+                },
+                headerTintColor: '#1A1A1A',
+                headerTitleStyle: {
+                  fontWeight: '600',
+                  fontSize: 18,
+                },
+              }}
+            />
+            <Stack.Screen 
+              name="JobDetails" 
+              component={JobDetailsScreen as any}
+              options={{ 
+                title: 'Job Details',
+                headerShown: true,
+                headerStyle: {
+                  backgroundColor: '#F9F9F9',
+                },
+                headerTintColor: '#1A1A1A',
+                headerTitleStyle: {
+                  fontWeight: '600',
+                  fontSize: 18,
+                },
+              }}
+            />
+            <Stack.Screen 
+              name="ResumeBuilder" 
+              component={ResumeBuilderScreen}
+              options={{ 
+                title: 'Resume Builder',
+                headerShown: true,
+                headerStyle: {
+                  backgroundColor: '#F9F9F9',
+                },
+                headerTintColor: '#1A1A1A',
+                headerTitleStyle: {
+                  fontWeight: '600',
+                  fontSize: 18,
+                },
+              }}
+            />
+            <Stack.Screen 
+              name="JobDetailsPage" 
+              component={JobDetailsPage}
+              options={{ 
+                title: 'Job Details',
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen 
+              name="ApplicationPage" 
+              component={ApplicationPage}
+              options={{ 
+                title: 'Application',
+                headerShown: false,
+              }}
+            />
+          </>
+        ) : (
+          <Stack.Screen name="Auth" component={AuthNavigator} />
+        )}
       </Stack.Navigator>
     </NavigationContainer>
   );

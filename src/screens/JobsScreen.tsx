@@ -1,13 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, FlatList, StatusBar, ScrollView, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, FlatList, StatusBar, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
 import { Text, FAB, useTheme, Card, Chip, Button } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
-  withSpring,
-  withTiming 
-} from 'react-native-reanimated';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useApp } from '../context/AppContext';
 import { Colors } from '../constants/colors';
@@ -18,7 +12,13 @@ import FiltersModal from '../components/FiltersModal';
 import { Job, FilterOptions } from '../types';
 import jobsData from '../data/jobs.json';
 
-const JobsScreen: React.FC = () => {
+const { width: screenWidth } = Dimensions.get('window');
+
+interface JobsScreenProps {
+  navigation: any;
+}
+
+const JobsScreen: React.FC<JobsScreenProps> = ({ navigation }) => {
   const theme = useTheme();
   const { state, dispatch } = useApp();
   const isDark = state.theme === 'dark';
@@ -35,19 +35,12 @@ const JobsScreen: React.FC = () => {
     remote: null,
     companySize: [],
   });
-  
-  const fabScale = useSharedValue(0);
-  const contentOpacity = useSharedValue(0);
 
   useEffect(() => {
     // Load jobs if not already loaded
     if (state.jobs.length === 0) {
       dispatch({ type: 'SET_JOBS', payload: jobsData });
     }
-    
-    // Animate FAB entrance
-    fabScale.value = withSpring(1, { damping: 15, stiffness: 300 });
-    contentOpacity.value = withTiming(1, { duration: 600 });
   }, []);
 
   useEffect(() => {
@@ -87,13 +80,6 @@ const JobsScreen: React.FC = () => {
     setRecommendedJobs(state.jobs.slice(0, 3));
   }, [state.jobs]);
 
-  const contentAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: contentOpacity.value,
-  }));
-
-  const fabAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: fabScale.value }],
-  }));
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -118,6 +104,11 @@ const JobsScreen: React.FC = () => {
       companySize: [],
     });
     setSearchQuery('');
+  };
+
+  const handleApplyToJob = (job: Job) => {
+    // Navigate to Job Details page
+    navigation.navigate('JobDetailsPage', { jobId: job.id });
   };
 
   const renderRecommendedJobs = () => (
@@ -191,9 +182,35 @@ const JobsScreen: React.FC = () => {
     <JobCard 
       job={item} 
       onSave={() => console.log('Save job:', item.id)}
-      onApply={() => console.log('Apply to job:', item.id)}
+      onApply={() => handleApplyToJob(item)}
     />
   );
+
+  const renderJobsGrid = () => {
+    const isTablet = screenWidth > 768;
+    const numColumns = isTablet ? 2 : 1;
+    const cardWidth = isTablet ? (screenWidth - 60) / 2 : screenWidth - 40;
+
+    return (
+      <View style={styles.jobsGrid}>
+        {filteredJobs.map((job, index) => (
+          <View 
+            key={job.id} 
+            style={[
+              styles.jobCardContainer,
+              { width: cardWidth }
+            ]}
+          >
+            <JobCard 
+              job={job} 
+              onSave={() => console.log('Save job:', job.id)}
+              onApply={() => handleApplyToJob(job)}
+            />
+          </View>
+        ))}
+      </View>
+    );
+  };
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
@@ -233,7 +250,7 @@ const JobsScreen: React.FC = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Animated.View style={[styles.content, contentAnimatedStyle]}>
+        <View style={styles.content}>
           {/* Header */}
           <View style={styles.header}>
             <Text variant="headlineMedium" style={styles.title}>
@@ -290,9 +307,9 @@ const JobsScreen: React.FC = () => {
 
           {/* Recommended Jobs */}
           {recommendedJobs.length > 0 && (
-            <Animated.View style={contentAnimatedStyle}>
+            <View>
               {renderRecommendedJobs()}
-            </Animated.View>
+            </View>
           )}
 
           {/* Jobs List */}
@@ -302,24 +319,12 @@ const JobsScreen: React.FC = () => {
             </Text>
             
             {filteredJobs.length > 0 ? (
-              <View style={styles.jobsList}>
-                {filteredJobs.map((job, index) => (
-                  <View key={job.id}>
-                    <JobCard 
-                      job={job} 
-                      onPress={() => console.log('Job pressed:', job.id)}
-                      onSave={() => console.log('Save job:', job.id)}
-                      onApply={() => console.log('Apply to job:', job.id)}
-                    />
-                    {index < filteredJobs.length - 1 && <View style={styles.separator} />}
-                  </View>
-                ))}
-              </View>
+              renderJobsGrid()
             ) : (
               renderEmptyState()
             )}
           </View>
-        </Animated.View>
+        </View>
       </ScrollView>
 
       {/* Filter Modal */}
@@ -331,13 +336,13 @@ const JobsScreen: React.FC = () => {
       />
 
       {/* FAB */}
-      <Animated.View style={[styles.fabContainer, fabAnimatedStyle]}>
+      <View style={styles.fabContainer}>
         <FAB
           icon={() => <MaterialCommunityIcons name="filter-variant" size={24} color="white" />}
           style={styles.fab}
           onPress={handleFilterPress}
         />
-      </Animated.View>
+      </View>
     </SafeAreaView>
   );
 };
@@ -345,7 +350,7 @@ const JobsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9F9F9',
+    backgroundColor: '#f9fafb',
   },
   scrollView: {
     flex: 1,
@@ -516,6 +521,15 @@ const styles = StyleSheet.create({
   jobsList: {
     marginBottom: 20,
   },
+  jobsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  jobCardContainer: {
+    marginBottom: 16,
+  },
   separator: {
     height: 12,
   },
@@ -544,7 +558,7 @@ const styles = StyleSheet.create({
     right: 20,
   },
   fab: {
-    backgroundColor: '#1976D2',
+    backgroundColor: '#3b82f6',
   },
 });
 

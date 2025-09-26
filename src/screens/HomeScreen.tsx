@@ -1,26 +1,29 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, ScrollView, RefreshControl, StatusBar, TouchableOpacity, Image } from 'react-native';
+import { View, StyleSheet, ScrollView, RefreshControl, StatusBar, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { Text, Card, Button, useTheme, Chip, Avatar, ProgressBar } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
-  withSpring,
+  withSpring, 
   withTiming,
-  withSequence,
   interpolate,
-  Extrapolate
+  runOnJS
 } from 'react-native-reanimated';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useApp } from '../context/AppContext';
 import { Colors } from '../constants/colors';
 import { Sizes } from '../constants/sizes';
 import ProfileCard from '../components/ProfileCard';
 import JobCard from '../components/JobCard';
 import SearchBar from '../components/SearchBar';
+import JobCardSkeleton from '../components/JobCardSkeleton';
+import { AnimatedButton, AnimatedCard } from '../components/MicroInteractions';
 import jobsData from '../data/jobs.json';
 import notificationsData from '../data/notifications.json';
+
+const { width: screenWidth } = Dimensions.get('window');
 
 const HomeScreen: React.FC = () => {
   const theme = useTheme();
@@ -30,11 +33,13 @@ const HomeScreen: React.FC = () => {
   
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isLoadingJobs, setIsLoadingJobs] = useState(true);
+  const [showJobDetails, setShowJobDetails] = useState(false);
   
-  const headerOpacity = useSharedValue(0);
-  const cardsOpacity = useSharedValue(0);
-  const progressCardsScale = useSharedValue(0);
-  const quickActionsScale = useSharedValue(0);
+  // Animation values
+  const jobsOpacity = useSharedValue(0);
+  const jobsTranslateY = useSharedValue(20);
+  const sectionScale = useSharedValue(0.95);
 
   useEffect(() => {
     // Load initial data
@@ -44,37 +49,22 @@ const HomeScreen: React.FC = () => {
     if (state.notifications.length === 0) {
       dispatch({ type: 'SET_NOTIFICATIONS', payload: notificationsData });
     }
-
-    // Animate entrance with staggered animations
-    headerOpacity.value = withTiming(1, { duration: 600 });
-    setTimeout(() => {
-      cardsOpacity.value = withTiming(1, { duration: 600 });
-    }, 200);
-    setTimeout(() => {
-      progressCardsScale.value = withSpring(1, { damping: 15, stiffness: 150 });
-    }, 400);
-    setTimeout(() => {
-      quickActionsScale.value = withSpring(1, { damping: 15, stiffness: 150 });
-    }, 600);
+    
+    // Simulate loading with animations
+    const loadJobs = async () => {
+      setIsLoadingJobs(true);
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      setIsLoadingJobs(false);
+      
+      // Animate jobs section
+      jobsOpacity.value = withTiming(1, { duration: 600 });
+      jobsTranslateY.value = withSpring(0, { damping: 15, stiffness: 300 });
+      sectionScale.value = withSpring(1, { damping: 15, stiffness: 300 });
+    };
+    
+    loadJobs();
   }, []);
 
-  const headerAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: headerOpacity.value,
-  }));
-
-  const cardsAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: cardsOpacity.value,
-  }));
-
-  const progressCardsAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: progressCardsScale.value }],
-    opacity: interpolate(progressCardsScale.value, [0, 1], [0, 1], Extrapolate.CLAMP),
-  }));
-
-  const quickActionsAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: quickActionsScale.value }],
-    opacity: interpolate(quickActionsScale.value, [0, 1], [0, 1], Extrapolate.CLAMP),
-  }));
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -110,6 +100,44 @@ const HomeScreen: React.FC = () => {
   const getRecentJobs = () => {
     return state.jobs.slice(0, 3);
   };
+
+  const getJobMatchPercentage = (job: any) => {
+    // Simulate match calculation based on user skills and job requirements
+    const userSkills = state.user?.professionalInfo?.skills || [];
+    const jobTags = job.tags || [];
+    const matchingSkills = userSkills.filter(skill => 
+      jobTags.some(tag => tag.toLowerCase().includes(skill.toLowerCase()))
+    );
+    return Math.min(95, Math.max(60, 60 + (matchingSkills.length * 10)));
+  };
+
+  const handleJobPress = (job: any) => {
+    navigation.navigate('JobDetails' as never, { job } as never);
+  };
+
+  const handleJobApply = (jobId: string) => {
+    // Handle job application
+    console.log('Applying to job:', jobId);
+  };
+
+  const handleJobSave = (jobId: string) => {
+    // Handle job save
+    console.log('Saving job:', jobId);
+  };
+
+  const handleJobShare = (job: any) => {
+    // Handle job share
+    console.log('Sharing job:', job.title);
+  };
+
+  // Animated styles
+  const animatedJobsStyle = useAnimatedStyle(() => ({
+    opacity: jobsOpacity.value,
+    transform: [
+      { translateY: jobsTranslateY.value },
+      { scale: sectionScale.value }
+    ],
+  }));
 
   const getUnreadNotifications = () => {
     return state.notifications.filter(n => !n.isRead).length;
@@ -149,7 +177,7 @@ const HomeScreen: React.FC = () => {
         }
       >
         {/* Professional Header with Avatar */}
-        <Animated.View style={[styles.header, headerAnimatedStyle]}>
+        <View style={styles.header}>
           <View style={styles.headerContent}>
             <View style={styles.greetingContainer}>
               <Text 
@@ -171,9 +199,9 @@ const HomeScreen: React.FC = () => {
               style={styles.avatar}
             />
           </View>
-        </Animated.View>
+        </View>
 
-        <Animated.View style={[styles.content, cardsAnimatedStyle]}>
+        <View style={styles.content}>
           {/* Profile Completion Card */}
           {state.user && (
             <Card style={styles.profileCard}>
@@ -207,7 +235,7 @@ const HomeScreen: React.FC = () => {
           )}
 
           {/* Your Progress - Horizontal Cards */}
-          <Animated.View style={[styles.progressSection, progressCardsAnimatedStyle]}>
+          <View style={styles.progressSection}>
             <Text variant="titleLarge" style={styles.sectionTitle}>
               Your Progress
             </Text>
@@ -252,10 +280,10 @@ const HomeScreen: React.FC = () => {
                 </Card.Content>
               </Card>
             </ScrollView>
-          </Animated.View>
+          </View>
 
           {/* Quick Actions */}
-          <Animated.View style={[styles.quickActionsSection, quickActionsAnimatedStyle]}>
+          <View style={styles.quickActionsSection}>
             <Text variant="titleLarge" style={styles.sectionTitle}>
               Quick Actions
             </Text>
@@ -285,83 +313,23 @@ const HomeScreen: React.FC = () => {
                 </Text>
               </TouchableOpacity>
             </View>
-          </Animated.View>
-
-          {/* Search Bar */}
-          <Card style={styles.searchCard}>
-            <Card.Content style={styles.searchContent}>
-              <View style={styles.searchContainer}>
-                <MaterialCommunityIcons name="magnify" size={24} color="#B0BEC5" />
-                <Text style={styles.searchPlaceholder}>
-                  Search for jobs, companies, or skills...
-                </Text>
-              </View>
-            </Card.Content>
-          </Card>
-
-          {/* Recommended Jobs */}
-          <View style={styles.jobsSection}>
-            <View style={styles.sectionHeader}>
-              <Text variant="titleLarge" style={styles.sectionTitle}>
-                Recommended Jobs
-              </Text>
-              <Button
-                mode="text"
-                onPress={() => {}}
-                textColor="#1976D2"
-              >
-                View All
-              </Button>
-            </View>
-            
-            {getRecentJobs().map((job, index) => (
-              <Card key={job.id} style={styles.jobCard}>
-                <Card.Content style={styles.jobCardContent}>
-                  <View style={styles.jobHeader}>
-                    <View style={styles.jobInfo}>
-                      <Text variant="titleMedium" style={styles.jobTitle}>
-                        {job.title}
-                      </Text>
-                      <Text variant="bodyMedium" style={styles.jobCompany}>
-                        {job.company}
-                      </Text>
-                      <View style={styles.jobLocation}>
-                        <MaterialCommunityIcons name="map-marker" size={16} color="#B0BEC5" />
-                        <Text variant="bodySmall" style={styles.jobLocationText}>
-                          {job.location}
-                        </Text>
-                      </View>
-                    </View>
-                    <View style={styles.jobLogo}>
-                      <MaterialCommunityIcons name="domain" size={32} color="#1976D2" />
-                    </View>
-                  </View>
-                  
-                  <View style={styles.jobDetails}>
-                    <View style={styles.jobTags}>
-                      <Chip 
-                        style={styles.jobTag}
-                        textStyle={styles.jobTagText}
-                      >
-                        {job.type}
-                      </Chip>
-                      {job.isUrgent && (
-                        <Chip 
-                          style={[styles.jobTag, styles.urgentTag]}
-                          textStyle={[styles.jobTagText, styles.urgentTagText]}
-                        >
-                          Urgent
-                        </Chip>
-                      )}
-                    </View>
-                    <Text variant="titleMedium" style={styles.jobSalary}>
-                      ${job.salary}
-                    </Text>
-                  </View>
-                </Card.Content>
-              </Card>
-            ))}
           </View>
+
+          {/* Enhanced Search Bar */}
+          <SearchBar
+            placeholder="Search for jobs, companies, or skills..."
+            onSearch={handleSearch}
+            onFilterPress={() => navigation.navigate('Jobs' as never)}
+            onVoiceSearch={() => console.log('Voice search activated')}
+            showVoiceSearch={true}
+            showSuggestions={true}
+            recentSearches={['React Native Developer', 'Remote Jobs', 'Frontend Developer']}
+            suggestions={['JavaScript', 'TypeScript', 'Mobile Development']}
+            activeFilters={[]}
+            onRemoveFilter={() => {}}
+            onClearFilters={() => {}}
+          />
+
 
           {/* Notifications Summary */}
           {getUnreadNotifications() > 0 && (
@@ -391,7 +359,7 @@ const HomeScreen: React.FC = () => {
               </Card.Content>
             </Card>
           )}
-        </Animated.View>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -441,13 +409,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   profileContent: {
-    padding: 20,
+    padding: 16,
   },
   profileHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   profileInfo: {
     flex: 1,
@@ -461,47 +429,49 @@ const styles = StyleSheet.create({
     color: '#666666',
   },
   progressBar: {
-    height: 6,
-    borderRadius: 3,
-    marginBottom: 16,
+    height: 4,
+    borderRadius: 2,
+    marginBottom: 12,
   },
   profileButton: {
     borderColor: '#1976D2',
   },
   progressSection: {
-    marginBottom: 24,
+    marginBottom: 20,
   },
   sectionTitle: {
-    fontWeight: '700',
+    fontWeight: '600',
     color: '#1A1A1A',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   progressCardsContainer: {
     paddingRight: 20,
   },
   progressCard: {
-    width: 120,
-    marginRight: 12,
-    elevation: 2,
-    borderRadius: 12,
+    width: 100,
+    marginRight: 10,
+    elevation: 1,
+    borderRadius: 8,
     backgroundColor: '#FFFFFF',
   },
   progressCardContent: {
     alignItems: 'center',
-    padding: 16,
+    padding: 12,
   },
   progressNumber: {
-    fontWeight: '700',
+    fontWeight: '600',
     color: '#1A1A1A',
-    marginTop: 8,
-    marginBottom: 4,
+    marginTop: 6,
+    marginBottom: 3,
+    fontSize: 18,
   },
   progressLabel: {
     color: '#666666',
     textAlign: 'center',
+    fontSize: 12,
   },
   quickActionsSection: {
-    marginBottom: 24,
+    marginBottom: 20,
   },
   quickActionsGrid: {
     flexDirection: 'row',
@@ -511,11 +481,11 @@ const styles = StyleSheet.create({
   quickActionButton: {
     width: '48%',
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: 8,
+    padding: 12,
     alignItems: 'center',
-    marginBottom: 12,
-    elevation: 2,
+    marginBottom: 10,
+    elevation: 1,
     borderWidth: 1,
     borderColor: '#E0E0E0',
   },
@@ -523,24 +493,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
     color: '#1976D2',
     fontWeight: '600',
-  },
-  searchCard: {
-    marginBottom: 24,
-    elevation: 2,
-    borderRadius: 12,
-    backgroundColor: '#FFFFFF',
-  },
-  searchContent: {
-    padding: 16,
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  searchPlaceholder: {
-    marginLeft: 12,
-    color: '#B0BEC5',
-    fontSize: 16,
   },
   jobsSection: {
     marginBottom: 24,
@@ -550,6 +502,78 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
+  },
+  sectionTitleContainer: {
+    flex: 1,
+  },
+  jobCountContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  jobCountText: {
+    marginLeft: 4,
+    color: '#666666',
+    fontWeight: '500',
+  },
+  loadingContainer: {
+    marginBottom: 16,
+  },
+  jobsList: {
+    marginBottom: 16,
+  },
+  jobCardWrapper: {
+    marginBottom: 12,
+  },
+  jobInsights: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+    paddingHorizontal: 4,
+  },
+  insightCard: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8F9FA',
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 8,
+    marginHorizontal: 2,
+  },
+  insightText: {
+    marginLeft: 4,
+    color: '#666666',
+    fontSize: 11,
+    fontWeight: '500',
+  },
+  quickJobActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  quickActionCard: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginHorizontal: 4,
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  quickActionText: {
+    marginLeft: 8,
+    color: '#1976D2',
+    fontWeight: '600',
   },
   jobCard: {
     marginBottom: 12,

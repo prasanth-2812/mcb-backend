@@ -1,69 +1,64 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, Image, TouchableOpacity, Alert } from 'react-native';
 import { Text, TextInput, Button, useTheme, Checkbox } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
-  withSpring,
-  withTiming 
-} from 'react-native-reanimated';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useApp } from '../context/AppContext';
 import { Colors } from '../constants/colors';
-import { Sizes } from '../constants/sizes';
-import profileData from '../data/profile.json';
+
+interface FormData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  password: string;
+  confirmPassword: string;
+}
 
 const SignupScreen: React.FC = () => {
   const theme = useTheme();
   const { state, login, navigateToScreen } = useApp();
   const isDark = state.theme === 'dark';
-  
-  const [formData, setFormData] = useState({
+
+  const [formData, setFormData] = useState<FormData>({
     firstName: '',
     lastName: '',
     email: '',
+    phone: '',
     password: '',
     confirmPassword: '',
-    phone: '',
-    location: '',
   });
-  const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [acceptTerms, setAcceptTerms] = useState(false);
-  
-  const logoScale = useSharedValue(0);
-  const formOpacity = useSharedValue(0);
+  const [agreeToTerms, setAgreeToTerms] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  React.useEffect(() => {
-    logoScale.value = withSpring(1, { damping: 15, stiffness: 300 });
-    formOpacity.value = withTiming(1, { duration: 600 });
-  }, []);
-
-  const logoAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: logoScale.value }],
-  }));
-
-  const formAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: formOpacity.value,
-  }));
-
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const isFormValid = () => {
+    return (
+      formData.firstName &&
+      formData.lastName &&
+      formData.email &&
+      formData.phone &&
+      formData.password &&
+      formData.confirmPassword &&
+      formData.password === formData.confirmPassword &&
+      agreeToTerms
+    );
+  };
+
   const handleSignup = async () => {
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
+    if (!isFormValid()) {
+      Alert.alert('Error', 'Please fill in all fields and ensure passwords match');
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      return;
-    }
-
-    if (!acceptTerms) {
+      Alert.alert('Error', 'Passwords do not match');
       return;
     }
 
@@ -71,39 +66,58 @@ const SignupScreen: React.FC = () => {
     
     // Simulate API call
     setTimeout(() => {
-      // For demo purposes, create a new profile with the form data
-      const newProfile = {
-        ...profileData,
+      login({
+        id: '1',
         personalInfo: {
-          ...profileData.personalInfo,
           firstName: formData.firstName,
           lastName: formData.lastName,
           email: formData.email,
           phone: formData.phone,
-          location: formData.location,
-        }
-      };
-      
-      login(newProfile as any);
+          location: 'New York, NY',
+          profileImage: '',
+          bio: 'Software Developer',
+        },
+        professionalInfo: {
+          title: 'Software Developer',
+          experience: '5 years',
+          skills: ['React', 'Node.js', 'TypeScript'],
+          availability: 'Full-time',
+          expectedSalary: '$80,000 - $100,000',
+          workType: ['Remote'],
+          languages: [{ language: 'English', proficiency: 'Native' }],
+        },
+        education: [],
+        experience: [],
+        projects: [],
+        certifications: [],
+        resume: {
+          fileName: '',
+          fileSize: '',
+          uploadDate: '',
+          url: '',
+        },
+        preferences: {
+          jobTypes: ['Full-time'],
+          workArrangement: ['Remote'],
+          industries: ['Technology'],
+          companySize: ['Medium'],
+          notificationSettings: {
+            emailNotifications: true,
+            pushNotifications: true,
+            jobMatches: true,
+            applicationUpdates: true,
+            weeklyDigest: true,
+          },
+        },
+        profileCompletion: 75,
+        lastUpdated: new Date().toISOString(),
+      });
       setIsLoading(false);
     }, 1500);
   };
 
-  const isFormValid = () => {
-    return formData.firstName && 
-           formData.lastName && 
-           formData.email && 
-           formData.password && 
-           formData.confirmPassword &&
-           formData.password === formData.confirmPassword &&
-           acceptTerms;
-  };
-
   return (
-    <SafeAreaView style={[
-      styles.container,
-      { backgroundColor: isDark ? Colors.background : Colors.background }
-    ]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? '#1A1A1A' : '#FFFFFF' }]}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
       
       <ScrollView 
@@ -111,306 +125,226 @@ const SignupScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <Animated.View style={[styles.logoContainer, logoAnimatedStyle]}>
-          <View style={[
-            styles.logo,
-            { backgroundColor: isDark ? Colors.primary : Colors.primary }
-          ]}>
-            <Text 
-              variant="displaySmall" 
-              style={[styles.logoText, { color: Colors.white }]}
-            >
-              MCB
-            </Text>
-          </View>
-          <Text 
-            variant="headlineSmall" 
-            style={[
-              styles.title,
-              { color: isDark ? Colors.white : Colors.textPrimary }
-            ]}
-          >
+        {/* Header */}
+        <View style={styles.header}>
+          <Image 
+            source={require('../../assets/logoJob.png')} 
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <Text style={[styles.title, { color: isDark ? '#FFFFFF' : '#1A1A1A' }]}>
             Create Account
           </Text>
-          <Text 
-            variant="bodyLarge" 
-            style={[
-              styles.subtitle,
-              { color: isDark ? Colors.gray : Colors.textSecondary }
-            ]}
-          >
+          <Text style={[styles.subtitle, { color: isDark ? '#B0B0B0' : '#666666' }]}>
             Join thousands of professionals building their careers
           </Text>
-        </Animated.View>
+        </View>
 
-        <Animated.View style={[styles.formContainer, formAnimatedStyle]}>
+        {/* Form */}
+        <View style={styles.form}>
+          {/* Name Row */}
           <View style={styles.nameRow}>
-            <TextInput
-              label="First Name"
-              value={formData.firstName}
-              onChangeText={(value) => handleInputChange('firstName', value)}
-              mode="outlined"
-              autoCapitalize="words"
-              style={[styles.input, styles.halfInput]}
-              contentStyle={[
-                styles.inputContent,
-                { color: isDark ? Colors.white : Colors.textPrimary }
-              ]}
-              outlineStyle={[
-                styles.inputOutline,
-                { borderColor: isDark ? Colors.border : Colors.borderLight }
-              ]}
-              theme={{
-                colors: {
-                  primary: isDark ? Colors.primary : Colors.primary,
-                  onSurface: isDark ? Colors.white : Colors.textPrimary,
-                  outline: isDark ? Colors.border : Colors.borderLight,
-                }
-              }}
-              accessibilityLabel="First name"
-            />
+            <View style={styles.halfInput}>
+              <Text style={[styles.label, { color: isDark ? '#FFFFFF' : '#1A1A1A' }]}>
+                First Name
+              </Text>
+              <TextInput
+                value={formData.firstName}
+                onChangeText={(value) => handleInputChange('firstName', value)}
+                placeholder="First name"
+                placeholderTextColor={isDark ? '#666666' : '#999999'}
+                autoCapitalize="words"
+                style={[
+                  styles.input,
+                  { 
+                    backgroundColor: isDark ? '#2A2A2A' : '#F8F9FA',
+                    borderColor: isDark ? '#404040' : '#E1E5E9',
+                    color: isDark ? '#FFFFFF' : '#1A1A1A'
+                  }
+                ]}
+              />
+            </View>
             
+            <View style={styles.halfInput}>
+              <Text style={[styles.label, { color: isDark ? '#FFFFFF' : '#1A1A1A' }]}>
+                Last Name
+              </Text>
+              <TextInput
+                value={formData.lastName}
+                onChangeText={(value) => handleInputChange('lastName', value)}
+                placeholder="Last name"
+                placeholderTextColor={isDark ? '#666666' : '#999999'}
+                autoCapitalize="words"
+                style={[
+                  styles.input,
+                  { 
+                    backgroundColor: isDark ? '#2A2A2A' : '#F8F9FA',
+                    borderColor: isDark ? '#404040' : '#E1E5E9',
+                    color: isDark ? '#FFFFFF' : '#1A1A1A'
+                  }
+                ]}
+              />
+            </View>
+          </View>
+
+          {/* Email */}
+          <View style={styles.inputContainer}>
+            <Text style={[styles.label, { color: isDark ? '#FFFFFF' : '#1A1A1A' }]}>
+              Email Address
+            </Text>
             <TextInput
-              label="Last Name"
-              value={formData.lastName}
-              onChangeText={(value) => handleInputChange('lastName', value)}
-              mode="outlined"
-              autoCapitalize="words"
-              style={[styles.input, styles.halfInput]}
-              contentStyle={[
-                styles.inputContent,
-                { color: isDark ? Colors.white : Colors.textPrimary }
-              ]}
-              outlineStyle={[
-                styles.inputOutline,
-                { borderColor: isDark ? Colors.border : Colors.borderLight }
-              ]}
-              theme={{
-                colors: {
-                  primary: isDark ? Colors.primary : Colors.primary,
-                  onSurface: isDark ? Colors.white : Colors.textPrimary,
-                  outline: isDark ? Colors.border : Colors.borderLight,
+              value={formData.email}
+              onChangeText={(value) => handleInputChange('email', value)}
+              placeholder="Enter your email"
+              placeholderTextColor={isDark ? '#666666' : '#999999'}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              style={[
+                styles.input,
+                { 
+                  backgroundColor: isDark ? '#2A2A2A' : '#F8F9FA',
+                  borderColor: isDark ? '#404040' : '#E1E5E9',
+                  color: isDark ? '#FFFFFF' : '#1A1A1A'
                 }
-              }}
-              accessibilityLabel="Last name"
+              ]}
             />
           </View>
 
-          <TextInput
-            label="Email"
-            value={formData.email}
-            onChangeText={(value) => handleInputChange('email', value)}
-            mode="outlined"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoComplete="email"
-            style={styles.input}
-            contentStyle={[
-              styles.inputContent,
-              { color: isDark ? Colors.white : Colors.textPrimary }
-            ]}
-            outlineStyle={[
-              styles.inputOutline,
-              { borderColor: isDark ? Colors.border : Colors.borderLight }
-            ]}
-            theme={{
-              colors: {
-                primary: isDark ? Colors.primary : Colors.primary,
-                onSurface: isDark ? Colors.white : Colors.textPrimary,
-                outline: isDark ? Colors.border : Colors.borderLight,
-              }
-            }}
-            accessibilityLabel="Email address"
-          />
-
-          <TextInput
-            label="Phone Number"
-            value={formData.phone}
-            onChangeText={(value) => handleInputChange('phone', value)}
-            mode="outlined"
-            keyboardType="phone-pad"
-            autoComplete="tel"
-            style={styles.input}
-            contentStyle={[
-              styles.inputContent,
-              { color: isDark ? Colors.white : Colors.textPrimary }
-            ]}
-            outlineStyle={[
-              styles.inputOutline,
-              { borderColor: isDark ? Colors.border : Colors.borderLight }
-            ]}
-            theme={{
-              colors: {
-                primary: isDark ? Colors.primary : Colors.primary,
-                onSurface: isDark ? Colors.white : Colors.textPrimary,
-                outline: isDark ? Colors.border : Colors.borderLight,
-              }
-            }}
-            accessibilityLabel="Phone number"
-          />
-
-          <TextInput
-            label="Location"
-            value={formData.location}
-            onChangeText={(value) => handleInputChange('location', value)}
-            mode="outlined"
-            autoCapitalize="words"
-            style={styles.input}
-            contentStyle={[
-              styles.inputContent,
-              { color: isDark ? Colors.white : Colors.textPrimary }
-            ]}
-            outlineStyle={[
-              styles.inputOutline,
-              { borderColor: isDark ? Colors.border : Colors.borderLight }
-            ]}
-            theme={{
-              colors: {
-                primary: isDark ? Colors.primary : Colors.primary,
-                onSurface: isDark ? Colors.white : Colors.textPrimary,
-                outline: isDark ? Colors.border : Colors.borderLight,
-              }
-            }}
-            accessibilityLabel="Location"
-          />
-
-          <TextInput
-            label="Password"
-            value={formData.password}
-            onChangeText={(value) => handleInputChange('password', value)}
-            mode="outlined"
-            secureTextEntry={!showPassword}
-            autoComplete="password-new"
-            style={styles.input}
-            contentStyle={[
-              styles.inputContent,
-              { color: isDark ? Colors.white : Colors.textPrimary }
-            ]}
-            outlineStyle={[
-              styles.inputOutline,
-              { borderColor: isDark ? Colors.border : Colors.borderLight }
-            ]}
-            right={
-              <TextInput.Icon
-                icon={showPassword ? 'eye-off' : 'eye'}
-                onPress={() => setShowPassword(!showPassword)}
-                accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
-              />
-            }
-            theme={{
-              colors: {
-                primary: isDark ? Colors.primary : Colors.primary,
-                onSurface: isDark ? Colors.white : Colors.textPrimary,
-                outline: isDark ? Colors.border : Colors.borderLight,
-              }
-            }}
-            accessibilityLabel="Password"
-          />
-
-          <TextInput
-            label="Confirm Password"
-            value={formData.confirmPassword}
-            onChangeText={(value) => handleInputChange('confirmPassword', value)}
-            mode="outlined"
-            secureTextEntry={!showConfirmPassword}
-            autoComplete="password-new"
-            style={styles.input}
-            contentStyle={[
-              styles.inputContent,
-              { color: isDark ? Colors.white : Colors.textPrimary }
-            ]}
-            outlineStyle={[
-              styles.inputOutline,
-              { borderColor: isDark ? Colors.border : Colors.borderLight }
-            ]}
-            right={
-              <TextInput.Icon
-                icon={showConfirmPassword ? 'eye-off' : 'eye'}
-                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                accessibilityLabel={showConfirmPassword ? 'Hide password' : 'Show password'}
-              />
-            }
-            theme={{
-              colors: {
-                primary: isDark ? Colors.primary : Colors.primary,
-                onSurface: isDark ? Colors.white : Colors.textPrimary,
-                outline: isDark ? Colors.border : Colors.borderLight,
-              }
-            }}
-            accessibilityLabel="Confirm password"
-          />
-
-          {formData.password && formData.confirmPassword && formData.password !== formData.confirmPassword && (
-            <Text 
-              variant="bodySmall" 
-              style={[styles.errorText, { color: Colors.error }]}
-            >
-              Passwords do not match
+          {/* Phone */}
+          <View style={styles.inputContainer}>
+            <Text style={[styles.label, { color: isDark ? '#FFFFFF' : '#1A1A1A' }]}>
+              Phone Number
             </Text>
-          )}
+            <TextInput
+              value={formData.phone}
+              onChangeText={(value) => handleInputChange('phone', value)}
+              placeholder="Enter your phone number"
+              placeholderTextColor={isDark ? '#666666' : '#999999'}
+              keyboardType="phone-pad"
+              style={[
+                styles.input,
+                { 
+                  backgroundColor: isDark ? '#2A2A2A' : '#F8F9FA',
+                  borderColor: isDark ? '#404040' : '#E1E5E9',
+                  color: isDark ? '#FFFFFF' : '#1A1A1A'
+                }
+              ]}
+            />
+          </View>
 
+          {/* Password */}
+          <View style={styles.inputContainer}>
+            <Text style={[styles.label, { color: isDark ? '#FFFFFF' : '#1A1A1A' }]}>
+              Password
+            </Text>
+            <View style={styles.passwordContainer}>
+              <TextInput
+                value={formData.password}
+                onChangeText={(value) => handleInputChange('password', value)}
+                placeholder="Enter your password"
+                placeholderTextColor={isDark ? '#666666' : '#999999'}
+                secureTextEntry={!showPassword}
+                style={[
+                  styles.passwordInput,
+                  { 
+                    backgroundColor: isDark ? '#2A2A2A' : '#F8F9FA',
+                    borderColor: isDark ? '#404040' : '#E1E5E9',
+                    color: isDark ? '#FFFFFF' : '#1A1A1A'
+                  }
+                ]}
+              />
+              <TouchableOpacity
+                style={styles.eyeIcon}
+                onPress={() => setShowPassword(!showPassword)}
+              >
+                <MaterialCommunityIcons
+                  name={showPassword ? 'eye-off' : 'eye'}
+                  size={20}
+                  color={isDark ? '#B0B0B0' : '#666666'}
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Confirm Password */}
+          <View style={styles.inputContainer}>
+            <Text style={[styles.label, { color: isDark ? '#FFFFFF' : '#1A1A1A' }]}>
+              Confirm Password
+            </Text>
+            <View style={styles.passwordContainer}>
+              <TextInput
+                value={formData.confirmPassword}
+                onChangeText={(value) => handleInputChange('confirmPassword', value)}
+                placeholder="Confirm your password"
+                placeholderTextColor={isDark ? '#666666' : '#999999'}
+                secureTextEntry={!showConfirmPassword}
+                style={[
+                  styles.passwordInput,
+                  { 
+                    backgroundColor: isDark ? '#2A2A2A' : '#F8F9FA',
+                    borderColor: isDark ? '#404040' : '#E1E5E9',
+                    color: isDark ? '#FFFFFF' : '#1A1A1A'
+                  }
+                ]}
+              />
+              <TouchableOpacity
+                style={styles.eyeIcon}
+                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                <MaterialCommunityIcons
+                  name={showConfirmPassword ? 'eye-off' : 'eye'}
+                  size={20}
+                  color={isDark ? '#B0B0B0' : '#666666'}
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Terms and Conditions */}
           <View style={styles.termsContainer}>
             <Checkbox
-              status={acceptTerms ? 'checked' : 'unchecked'}
-              onPress={() => setAcceptTerms(!acceptTerms)}
-              color={isDark ? Colors.primary : Colors.primary}
+              status={agreeToTerms ? 'checked' : 'unchecked'}
+              onPress={() => setAgreeToTerms(!agreeToTerms)}
+              color="#3B82F6"
             />
-            <Text 
-              variant="bodySmall" 
-              style={[
-                styles.termsText,
-                { color: isDark ? Colors.gray : Colors.textSecondary }
-              ]}
-            >
+            <Text style={[styles.termsText, { color: isDark ? '#B0B0B0' : '#666666' }]}>
               I agree to the{' '}
-              <Text 
-                style={[styles.linkText, { color: isDark ? Colors.primary : Colors.primary }]}
-                onPress={() => {}}
-              >
+              <Text style={[styles.linkText, { color: '#3B82F6' }]}>
                 Terms of Service
               </Text>
               {' '}and{' '}
-              <Text 
-                style={[styles.linkText, { color: isDark ? Colors.primary : Colors.primary }]}
-                onPress={() => {}}
-              >
+              <Text style={[styles.linkText, { color: '#3B82F6' }]}>
                 Privacy Policy
               </Text>
             </Text>
           </View>
 
-          <Button
-            mode="contained"
+          <TouchableOpacity
+            style={[
+              styles.signupButton,
+              { backgroundColor: '#3B82F6' },
+              (!isFormValid() || isLoading) && styles.signupButtonDisabled
+            ]}
             onPress={handleSignup}
-            loading={isLoading}
             disabled={!isFormValid() || isLoading}
-            style={styles.signupButton}
-            buttonColor={isDark ? Colors.primary : Colors.primary}
-            contentStyle={styles.buttonContent}
           >
-            {isLoading ? 'Creating Account...' : 'Create Account'}
-          </Button>
-
-          <View style={styles.loginContainer}>
-            <Text 
-              variant="bodyMedium" 
-              style={[
-                styles.loginText,
-                { color: isDark ? Colors.gray : Colors.textSecondary }
-              ]}
-            >
-              Already have an account?{' '}
+            <Text style={styles.signupButtonText}>
+              {isLoading ? 'Creating Account...' : 'Create Account'}
             </Text>
-            <Button
-              mode="text"
-              onPress={() => navigateToScreen('login')}
-              textColor={isDark ? Colors.primary : Colors.primary}
-              style={styles.loginButton}
-            >
+          </TouchableOpacity>
+        </View>
+
+        {/* Footer */}
+        <View style={styles.footer}>
+          <Text style={[styles.footerText, { color: isDark ? '#B0B0B0' : '#666666' }]}>
+            Already have an account?{' '}
+          </Text>
+          <TouchableOpacity onPress={() => navigateToScreen('login')}>
+            <Text style={[styles.loginLink, { color: '#3B82F6' }]}>
               Sign In
-            </Button>
-          </View>
-        </Animated.View>
+            </Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -422,97 +356,123 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: Sizes.lg,
+    paddingHorizontal: 24,
   },
-  logoContainer: {
+  header: {
     alignItems: 'center',
-    paddingTop: Sizes.xl,
-    paddingBottom: Sizes.lg,
+    paddingTop: 60,
+    paddingBottom: 40,
   },
   logo: {
-    width: 60,
+    width: 120,
     height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: Sizes.md,
-    elevation: Sizes.elevation2,
-    shadowColor: Colors.shadow,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-  },
-  logoText: {
-    fontWeight: 'bold',
-    letterSpacing: 1,
+    marginBottom: 32,
   },
   title: {
-    fontWeight: 'bold',
-    marginBottom: Sizes.xs,
+    fontSize: 28,
+    fontWeight: '700',
+    marginBottom: 8,
+    textAlign: 'center',
   },
   subtitle: {
+    fontSize: 16,
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: 24,
   },
-  formContainer: {
+  form: {
     flex: 1,
-    paddingBottom: Sizes.xl,
+    paddingBottom: 40,
   },
   nameRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginBottom: 24,
   },
   halfInput: {
-    flex: 1,
-    marginRight: Sizes.sm,
+    flex: 0.48,
+  },
+  inputContainer: {
+    marginBottom: 24,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
   },
   input: {
-    marginBottom: Sizes.md,
+    height: 56,
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingHorizontal: 16,
+    fontSize: 16,
   },
-  inputContent: {
-    fontSize: Sizes.fontSizeMd,
+  passwordContainer: {
+    position: 'relative',
   },
-  inputOutline: {
-    borderRadius: Sizes.radiusMd,
+  passwordInput: {
+    height: 56,
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingHorizontal: 16,
+    paddingRight: 50,
+    fontSize: 16,
   },
-  errorText: {
-    marginTop: -Sizes.sm,
-    marginBottom: Sizes.sm,
-    marginLeft: Sizes.sm,
+  eyeIcon: {
+    position: 'absolute',
+    right: 16,
+    top: 18,
+    padding: 4,
   },
   termsContainer: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: Sizes.xl,
+    marginBottom: 32,
   },
   termsText: {
     flex: 1,
-    marginLeft: Sizes.sm,
+    marginLeft: 12,
     lineHeight: 20,
+    fontSize: 14,
   },
   linkText: {
     textDecorationLine: 'underline',
+    fontWeight: '500',
   },
   signupButton: {
-    borderRadius: Sizes.radiusMd,
-    marginBottom: Sizes.lg,
+    height: 56,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
-  buttonContent: {
-    paddingVertical: Sizes.sm,
+  signupButtonDisabled: {
+    opacity: 0.7,
   },
-  loginContainer: {
+  signupButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  footer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    paddingTop: 32,
+    paddingBottom: 20,
   },
-  loginText: {
-    // Additional styles if needed
+  footerText: {
+    fontSize: 16,
   },
-  loginButton: {
-    // Additional styles if needed
+  loginLink: {
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

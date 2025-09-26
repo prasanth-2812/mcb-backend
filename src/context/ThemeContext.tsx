@@ -4,13 +4,13 @@ import { useColorScheme } from 'react-native';
 
 // Blue & White Theme Colors
 const blueWhiteColors = {
-  primary: '#1976D2',
-  primaryVariant: '#1565C0',
+  primary: '#3b82f6',
+  primaryVariant: '#2563eb',
   secondary: '#03DAC6',
   secondaryVariant: '#018786',
   surface: '#FFFFFF',
   surfaceVariant: '#F5F5F5',
-  background: '#F9F9F9',
+  background: '#f9fafb',
   error: '#B00020',
   onPrimary: '#FFFFFF',
   onSecondary: '#000000',
