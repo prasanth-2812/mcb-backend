@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, StatusBar, Image } from 'react-native';
+import { View, StyleSheet, ScrollView, StatusBar, Image, TouchableOpacity } from 'react-native';
 import { Text, Button, Card, Chip, Divider, useTheme, IconButton } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
@@ -106,14 +107,35 @@ const JobDetailsScreen: React.FC<JobDetailsScreenProps> = ({ route, navigation }
   const isSaved = state.savedJobs.includes(job.id);
 
   return (
-    <SafeAreaView style={[
-      styles.container,
-      { backgroundColor: isDark ? Colors.background : Colors.background }
-    ]}>
-      <StatusBar 
-        barStyle={isDark ? 'light-content' : 'dark-content'}
-        backgroundColor={isDark ? Colors.background : Colors.background}
-      />
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#F9F9F9" />
+      
+      {/* Header Bar */}
+      <View style={styles.headerBar}>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+          activeOpacity={0.7}
+        >
+          <MaterialCommunityIcons name="arrow-left" size={24} color="#1976D2" />
+        </TouchableOpacity>
+        
+        <Text variant="headlineSmall" style={styles.headerTitle}>
+          Job Details
+        </Text>
+        
+        <TouchableOpacity 
+          style={styles.bookmarkButton}
+          onPress={handleSave}
+          activeOpacity={0.7}
+        >
+          <MaterialCommunityIcons 
+            name={isSaved ? "bookmark" : "bookmark-outline"} 
+            size={24} 
+            color={isSaved ? "#1976D2" : "#666666"} 
+          />
+        </TouchableOpacity>
+      </View>
       
       <ScrollView 
         style={styles.scrollView}
@@ -121,327 +143,202 @@ const JobDetailsScreen: React.FC<JobDetailsScreenProps> = ({ route, navigation }
         showsVerticalScrollIndicator={false}
       >
         <Animated.View style={[styles.content, contentAnimatedStyle]}>
-          {/* Header Card */}
-          <Card style={[
-            styles.headerCard,
-            { backgroundColor: isDark ? Colors.darkGray : Colors.white }
-          ]}>
-            <Card.Content style={styles.headerContent}>
-              <View style={styles.companyInfo}>
-                <Image 
-                  source={{ uri: job.companyLogo }} 
-                  style={styles.companyLogo}
-                  accessibilityLabel={`${job.company} logo`}
-                />
-                <View style={styles.jobInfo}>
-                  <Text 
-                    variant="headlineSmall" 
-                    style={[
-                      styles.jobTitle,
-                      { color: isDark ? Colors.white : Colors.textPrimary }
-                    ]}
-                  >
-                    {job.title}
-                  </Text>
-                  <Text 
-                    variant="titleMedium" 
-                    style={[
-                      styles.companyName,
-                      { color: isDark ? Colors.gray : Colors.textSecondary }
-                    ]}
-                  >
+          {/* Job Overview Card */}
+          <Card style={styles.jobOverviewCard}>
+            <Card.Content style={styles.jobOverviewContent}>
+              <View style={styles.companySection}>
+                <View style={styles.companyLogoContainer}>
+                  {job.companyLogo ? (
+                    <Image 
+                      source={{ uri: job.companyLogo }} 
+                      style={styles.companyLogo}
+                      accessibilityLabel={`${job.company} logo`}
+                    />
+                  ) : (
+                    <View style={styles.companyLogoPlaceholder}>
+                      <Text style={styles.companyLogoText}>
+                        {job.company.charAt(0).toUpperCase()}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+                
+                <View style={styles.companyInfo}>
+                  <Text variant="titleLarge" style={styles.companyName}>
                     {job.company}
                   </Text>
-                  <Text 
-                    variant="bodyLarge" 
-                    style={[
-                      styles.location,
-                      { color: isDark ? Colors.gray : Colors.textSecondary }
-                    ]}
-                  >
-                    {job.location}
-                  </Text>
+                  
+                  <View style={styles.locationRow}>
+                    <MaterialCommunityIcons name="map-marker-outline" size={22} color="#666666" />
+                    <Text variant="bodyLarge" style={styles.location}>
+                      {job.location}
+                    </Text>
+                  </View>
                 </View>
               </View>
 
-              <View style={styles.jobMeta}>
-                <View style={styles.metaRow}>
+              <View style={styles.jobTitleSection}>
+                <Text variant="headlineMedium" style={styles.jobTitle}>
+                  {job.title}
+                </Text>
+                
+                <View style={styles.jobTypeRow}>
                   <Chip 
-                    style={[
-                      styles.metaChip,
-                      { backgroundColor: isDark ? Colors.lightGray : Colors.lightGray }
-                    ]}
-                    textStyle={[
-                      styles.metaChipText,
-                      { color: isDark ? Colors.textPrimary : Colors.textSecondary }
-                    ]}
+                    style={styles.jobTypeChip}
+                    textStyle={styles.jobTypeChipText}
+                    icon={() => <MaterialCommunityIcons name="briefcase-outline" size={20} color="#1976D2" />}
                   >
                     {job.type}
                   </Chip>
-                  <Chip 
-                    style={[
-                      styles.metaChip,
-                      { backgroundColor: isDark ? Colors.lightGray : Colors.lightGray }
-                    ]}
-                    textStyle={[
-                      styles.metaChipText,
-                      { color: isDark ? Colors.textPrimary : Colors.textSecondary }
-                    ]}
-                  >
-                    {job.experience}
-                  </Chip>
+                  
+                  <View style={styles.postedDateRow}>
+                    <MaterialCommunityIcons name="calendar-outline" size={20} color="#666666" />
+                    <Text variant="bodyMedium" style={styles.postedDate}>
+                      Posted {new Date(job.postedDate).toLocaleDateString()}
+                    </Text>
+                  </View>
                 </View>
-                
-                <Text 
-                  variant="titleMedium" 
-                  style={[
-                    styles.salary,
-                    { color: Colors.success }
-                  ]}
-                >
-                  {job.salary}
-                </Text>
-
-                <View style={styles.tagsContainer}>
-                  {job.tags.map((tag, index) => (
-                    <Chip 
-                      key={index}
-                      style={[
-                        styles.tag,
-                        { backgroundColor: isDark ? Colors.primary : Colors.primaryContainer }
-                      ]}
-                      textStyle={[
-                        styles.tagText,
-                        { color: isDark ? Colors.white : Colors.primary }
-                      ]}
-                      compact
-                    >
-                      {tag}
-                    </Chip>
-                  ))}
-                </View>
-
-                {job.isUrgent && (
-                  <Chip 
-                    style={[styles.urgentChip, { backgroundColor: Colors.error }]}
-                    textStyle={styles.urgentText}
-                  >
-                    Urgent Hiring
-                  </Chip>
-                )}
               </View>
             </Card.Content>
           </Card>
 
-          {/* Description Card */}
-          <Card style={[
-            styles.descriptionCard,
-            { backgroundColor: isDark ? Colors.darkGray : Colors.white }
-          ]}>
+          {/* Salary & Experience Card */}
+          <Card style={styles.salaryExperienceCard}>
+            <Card.Content style={styles.salaryExperienceContent}>
+              <View style={styles.salaryRow}>
+                <MaterialCommunityIcons name="currency-inr" size={24} color="#4CAF50" />
+                <Text variant="headlineSmall" style={styles.salary}>
+                  {job.salary}
+                </Text>
+              </View>
+              
+              <View style={styles.experienceRow}>
+                <MaterialCommunityIcons name="account-tie-outline" size={24} color="#1976D2" />
+                <Text variant="titleMedium" style={styles.experience}>
+                  {job.experience} experience
+                </Text>
+              </View>
+            </Card.Content>
+          </Card>
+
+          {/* Job Description Card */}
+          <Card style={styles.descriptionCard}>
             <Card.Content style={styles.descriptionContent}>
-              <Text 
-                variant="titleLarge" 
-                style={[
-                  styles.sectionTitle,
-                  { color: isDark ? Colors.white : Colors.textPrimary }
-                ]}
-              >
+              <Text variant="titleLarge" style={styles.sectionTitle}>
                 Job Description
               </Text>
-              <Text 
-                variant="bodyLarge" 
-                style={[
-                  styles.description,
-                  { color: isDark ? Colors.gray : Colors.textSecondary }
-                ]}
+              <ScrollView 
+                style={styles.descriptionScroll}
+                showsVerticalScrollIndicator={false}
+                nestedScrollEnabled={true}
               >
-                {job.description}
+                <Text variant="bodyLarge" style={styles.description}>
+                  {job.description}
+                </Text>
+              </ScrollView>
+            </Card.Content>
+          </Card>
+
+          {/* Skills Required Card */}
+          <Card style={styles.skillsCard}>
+            <Card.Content style={styles.skillsContent}>
+              <Text variant="titleLarge" style={styles.sectionTitle}>
+                Skills Required
+              </Text>
+              <View style={styles.skillsContainer}>
+                {job.tags.map((skill, index) => (
+                  <Chip 
+                    key={index}
+                    style={styles.skillChip}
+                    textStyle={styles.skillChipText}
+                    icon={() => <MaterialCommunityIcons name="star-outline" size={20} color="#1976D2" />}
+                  >
+                    {skill}
+                  </Chip>
+                ))}
+              </View>
+            </Card.Content>
+          </Card>
+
+          {/* About Company Card */}
+          <Card style={styles.aboutCompanyCard}>
+            <Card.Content style={styles.aboutCompanyContent}>
+              <Text variant="titleLarge" style={styles.sectionTitle}>
+                About Company
+              </Text>
+              <Text variant="bodyLarge" style={styles.companyDescription}>
+                {job.company} is a leading technology company focused on innovation and growth. 
+                We are committed to providing excellent opportunities for talented professionals 
+                to advance their careers in a dynamic and collaborative environment.
               </Text>
             </Card.Content>
           </Card>
 
-          {/* Requirements Card */}
-          <Card style={[
-            styles.requirementsCard,
-            { backgroundColor: isDark ? Colors.darkGray : Colors.white }
-          ]}>
-            <Card.Content style={styles.requirementsContent}>
-              <Text 
-                variant="titleLarge" 
-                style={[
-                  styles.sectionTitle,
-                  { color: isDark ? Colors.white : Colors.textPrimary }
-                ]}
-              >
-                Requirements
-              </Text>
-              {job.requirements.map((requirement, index) => (
-                <View key={index} style={styles.requirementItem}>
-                  <Text 
-                    variant="bodyLarge" 
-                    style={[
-                      styles.requirementBullet,
-                      { color: isDark ? Colors.primary : Colors.primary }
-                    ]}
-                  >
-                    •
-                  </Text>
-                  <Text 
-                    variant="bodyLarge" 
-                    style={[
-                      styles.requirementText,
-                      { color: isDark ? Colors.gray : Colors.textSecondary }
-                    ]}
-                  >
-                    {requirement}
-                  </Text>
-                </View>
-              ))}
-            </Card.Content>
-          </Card>
-
-          {/* Benefits Card */}
-          <Card style={[
-            styles.benefitsCard,
-            { backgroundColor: isDark ? Colors.darkGray : Colors.white }
-          ]}>
-            <Card.Content style={styles.benefitsContent}>
-              <Text 
-                variant="titleLarge" 
-                style={[
-                  styles.sectionTitle,
-                  { color: isDark ? Colors.white : Colors.textPrimary }
-                ]}
-              >
-                Benefits
-              </Text>
-              {job.benefits.map((benefit, index) => (
-                <View key={index} style={styles.benefitItem}>
-                  <Text 
-                    variant="bodyLarge" 
-                    style={[
-                      styles.benefitBullet,
-                      { color: isDark ? Colors.success : Colors.success }
-                    ]}
-                  >
-                    ✓
-                  </Text>
-                  <Text 
-                    variant="bodyLarge" 
-                    style={[
-                      styles.benefitText,
-                      { color: isDark ? Colors.gray : Colors.textSecondary }
-                    ]}
-                  >
-                    {benefit}
-                  </Text>
-                </View>
-              ))}
-            </Card.Content>
-          </Card>
-
-          {/* Job Details */}
-          <Card style={[
-            styles.detailsCard,
-            { backgroundColor: isDark ? Colors.darkGray : Colors.white }
-          ]}>
-            <Card.Content style={styles.detailsContent}>
-              <Text 
-                variant="titleLarge" 
-                style={[
-                  styles.sectionTitle,
-                  { color: isDark ? Colors.white : Colors.textPrimary }
-                ]}
-              >
+          {/* Job Details Card */}
+          <Card style={styles.jobDetailsCard}>
+            <Card.Content style={styles.jobDetailsContent}>
+              <Text variant="titleLarge" style={styles.sectionTitle}>
                 Job Details
               </Text>
+              
               <View style={styles.detailsGrid}>
                 <View style={styles.detailItem}>
-                  <Text 
-                    variant="bodyMedium" 
-                    style={[
-                      styles.detailLabel,
-                      { color: isDark ? Colors.gray : Colors.textSecondary }
-                    ]}
-                  >
+                  <Text variant="bodyMedium" style={styles.detailLabel}>
                     Posted Date
                   </Text>
-                  <Text 
-                    variant="bodyLarge" 
-                    style={[
-                      styles.detailValue,
-                      { color: isDark ? Colors.white : Colors.textPrimary }
-                    ]}
-                  >
+                  <Text variant="bodyLarge" style={styles.detailValue}>
                     {new Date(job.postedDate).toLocaleDateString()}
                   </Text>
                 </View>
+                
                 <View style={styles.detailItem}>
-                  <Text 
-                    variant="bodyMedium" 
-                    style={[
-                      styles.detailLabel,
-                      { color: isDark ? Colors.gray : Colors.textSecondary }
-                    ]}
-                  >
+                  <Text variant="bodyMedium" style={styles.detailLabel}>
                     Application Deadline
                   </Text>
-                  <Text 
-                    variant="bodyLarge" 
-                    style={[
-                      styles.detailValue,
-                      { color: isDark ? Colors.white : Colors.textPrimary }
-                    ]}
-                  >
+                  <Text variant="bodyLarge" style={styles.detailValue}>
                     {new Date(job.deadline).toLocaleDateString()}
                   </Text>
                 </View>
+                
                 <View style={styles.detailItem}>
-                  <Text 
-                    variant="bodyMedium" 
-                    style={[
-                      styles.detailLabel,
-                      { color: isDark ? Colors.gray : Colors.textSecondary }
-                    ]}
-                  >
+                  <Text variant="bodyMedium" style={styles.detailLabel}>
                     Work Arrangement
                   </Text>
-                  <Text 
-                    variant="bodyLarge" 
-                    style={[
-                      styles.detailValue,
-                      { color: isDark ? Colors.white : Colors.textPrimary }
-                    ]}
-                  >
+                  <Text variant="bodyLarge" style={styles.detailValue}>
                     {job.isRemote ? 'Remote' : 'On-site'}
                   </Text>
                 </View>
+                
+                {job.isUrgent && (
+                  <View style={styles.detailItem}>
+                    <Text variant="bodyMedium" style={styles.detailLabel}>
+                      Status
+                    </Text>
+                    <View style={styles.urgentBadge}>
+                      <MaterialCommunityIcons name="alert-circle" size={16} color="#F44336" />
+                      <Text variant="bodyLarge" style={styles.urgentText}>
+                        Urgent Hiring
+                      </Text>
+                    </View>
+                  </View>
+                )}
               </View>
             </Card.Content>
           </Card>
         </Animated.View>
       </ScrollView>
 
-      {/* Action Buttons */}
-      <Animated.View style={[styles.actionContainer, buttonAnimatedStyle]}>
-        <View style={styles.actionButtons}>
-          <IconButton
-            icon={isSaved ? 'bookmark' : 'bookmark-outline'}
-            iconColor={isSaved ? Colors.warning : Colors.gray}
-            size={24}
-            onPress={handleSave}
-            style={styles.actionButton}
-            accessibilityLabel={isSaved ? 'Remove from saved jobs' : 'Save job'}
-          />
-          <IconButton
-            icon="share"
-            iconColor={Colors.gray}
-            size={24}
-            onPress={handleShare}
-            style={styles.actionButton}
-            accessibilityLabel="Share job"
-          />
-        </View>
+      {/* Bottom Fixed Action Bar */}
+      <Animated.View style={[styles.bottomActionBar, buttonAnimatedStyle]}>
+        <Button
+          mode="outlined"
+          onPress={handleShare}
+          style={styles.shareButton}
+          textColor="#1976D2"
+          icon={() => <MaterialCommunityIcons name="share-variant" size={22} color="#1976D2" />}
+        >
+          Share
+        </Button>
         
         <Button
           mode="contained"
@@ -449,8 +346,8 @@ const JobDetailsScreen: React.FC<JobDetailsScreenProps> = ({ route, navigation }
           loading={isApplying}
           disabled={isApplied || isApplying}
           style={styles.applyButton}
-          buttonColor={isApplied ? Colors.success : (isDark ? Colors.primary : Colors.primary)}
-          contentStyle={styles.applyButtonContent}
+          buttonColor="#1976D2"
+          icon={() => <MaterialCommunityIcons name="send-outline" size={22} color="#FFFFFF" />}
         >
           {isApplied ? 'Applied' : (isApplying ? 'Applying...' : 'Apply Now')}
         </Button>
@@ -462,184 +359,279 @@ const JobDetailsScreen: React.FC<JobDetailsScreenProps> = ({ route, navigation }
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#F9F9F9',
+  },
+  headerBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  backButton: {
+    padding: 8,
+    borderRadius: 20,
+  },
+  headerTitle: {
+    fontWeight: 'bold',
+    color: '#1976D2',
+    flex: 1,
+    textAlign: 'center',
+  },
+  bookmarkButton: {
+    padding: 8,
+    borderRadius: 20,
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 100, // Space for action buttons
+    paddingBottom: 100,
   },
   content: {
-    padding: Sizes.md,
+    padding: 16,
   },
-  headerCard: {
-    marginBottom: Sizes.md,
-    elevation: Sizes.elevation2,
-    borderRadius: Sizes.radiusMd,
+  jobOverviewCard: {
+    marginBottom: 16,
+    elevation: 3,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
   },
-  headerContent: {
-    padding: Sizes.lg,
+  jobOverviewContent: {
+    padding: 20,
   },
-  companyInfo: {
+  companySection: {
     flexDirection: 'row',
-    marginBottom: Sizes.lg,
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  companyLogoContainer: {
+    marginRight: 16,
   },
   companyLogo: {
     width: 60,
     height: 60,
-    borderRadius: Sizes.radiusMd,
-    marginRight: Sizes.md,
+    borderRadius: 12,
   },
-  jobInfo: {
+  companyLogoPlaceholder: {
+    width: 60,
+    height: 60,
+    borderRadius: 12,
+    backgroundColor: '#1976D2',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  companyLogoText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  companyInfo: {
     flex: 1,
+  },
+  companyName: {
+    fontWeight: 'bold',
+    color: '#1976D2',
+    marginBottom: 8,
+  },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  location: {
+    marginLeft: 8,
+    color: '#666666',
+  },
+  jobTitleSection: {
+    marginTop: 8,
   },
   jobTitle: {
     fontWeight: 'bold',
-    marginBottom: Sizes.xs,
+    color: '#333333',
+    marginBottom: 12,
   },
-  companyName: {
-    marginBottom: Sizes.xs,
-  },
-  location: {
-    // Additional styles if needed
-  },
-  jobMeta: {
-    // Additional styles if needed
-  },
-  metaRow: {
+  jobTypeRow: {
     flexDirection: 'row',
-    marginBottom: Sizes.md,
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  metaChip: {
-    marginRight: Sizes.sm,
+  jobTypeChip: {
+    backgroundColor: '#E3F2FD',
   },
-  metaChipText: {
-    fontSize: Sizes.fontSizeSm,
+  jobTypeChipText: {
+    color: '#1976D2',
+    fontWeight: '500',
+  },
+  postedDateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  postedDate: {
+    marginLeft: 8,
+    color: '#666666',
+  },
+  salaryExperienceCard: {
+    marginBottom: 16,
+    elevation: 3,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+  },
+  salaryExperienceContent: {
+    padding: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  salaryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
   },
   salary: {
+    marginLeft: 12,
     fontWeight: 'bold',
-    marginBottom: Sizes.md,
+    color: '#4CAF50',
+    fontSize: 20,
   },
-  tagsContainer: {
+  experienceRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: Sizes.md,
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'flex-end',
   },
-  tag: {
-    marginRight: Sizes.sm,
-    marginBottom: Sizes.sm,
-  },
-  tagText: {
-    fontSize: Sizes.fontSizeSm,
-  },
-  urgentChip: {
-    alignSelf: 'flex-start',
-  },
-  urgentText: {
-    color: Colors.white,
-    fontSize: Sizes.fontSizeSm,
-    fontWeight: '600',
+  experience: {
+    marginLeft: 12,
+    fontWeight: '500',
+    color: '#1976D2',
   },
   descriptionCard: {
-    marginBottom: Sizes.md,
-    elevation: Sizes.elevation2,
-    borderRadius: Sizes.radiusMd,
+    marginBottom: 16,
+    elevation: 3,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
   },
   descriptionContent: {
-    padding: Sizes.lg,
+    padding: 20,
   },
   sectionTitle: {
     fontWeight: 'bold',
-    marginBottom: Sizes.md,
+    color: '#333333',
+    marginBottom: 16,
+  },
+  descriptionScroll: {
+    maxHeight: 200,
   },
   description: {
     lineHeight: 24,
+    color: '#666666',
   },
-  requirementsCard: {
-    marginBottom: Sizes.md,
-    elevation: Sizes.elevation2,
-    borderRadius: Sizes.radiusMd,
+  skillsCard: {
+    marginBottom: 16,
+    elevation: 3,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
   },
-  requirementsContent: {
-    padding: Sizes.lg,
+  skillsContent: {
+    padding: 20,
   },
-  requirementItem: {
+  skillsContainer: {
     flexDirection: 'row',
-    marginBottom: Sizes.sm,
+    flexWrap: 'wrap',
   },
-  requirementBullet: {
-    marginRight: Sizes.sm,
-    marginTop: 2,
+  skillChip: {
+    marginRight: 8,
+    marginBottom: 8,
+    backgroundColor: '#E3F2FD',
   },
-  requirementText: {
-    flex: 1,
-    lineHeight: 22,
+  skillChipText: {
+    color: '#1976D2',
+    fontWeight: '500',
   },
-  benefitsCard: {
-    marginBottom: Sizes.md,
-    elevation: Sizes.elevation2,
-    borderRadius: Sizes.radiusMd,
+  aboutCompanyCard: {
+    marginBottom: 16,
+    elevation: 3,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
   },
-  benefitsContent: {
-    padding: Sizes.lg,
+  aboutCompanyContent: {
+    padding: 20,
   },
-  benefitItem: {
-    flexDirection: 'row',
-    marginBottom: Sizes.sm,
+  companyDescription: {
+    lineHeight: 24,
+    color: '#666666',
   },
-  benefitBullet: {
-    marginRight: Sizes.sm,
-    marginTop: 2,
+  jobDetailsCard: {
+    marginBottom: 16,
+    elevation: 3,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
   },
-  benefitText: {
-    flex: 1,
-    lineHeight: 22,
-  },
-  detailsCard: {
-    marginBottom: Sizes.md,
-    elevation: Sizes.elevation2,
-    borderRadius: Sizes.radiusMd,
-  },
-  detailsContent: {
-    padding: Sizes.lg,
+  jobDetailsContent: {
+    padding: 20,
   },
   detailsGrid: {
-    // Additional styles if needed
+    marginTop: 8,
   },
   detailItem: {
-    marginBottom: Sizes.md,
+    marginBottom: 16,
   },
   detailLabel: {
-    marginBottom: Sizes.xs,
+    color: '#666666',
+    marginBottom: 4,
   },
   detailValue: {
     fontWeight: '500',
+    color: '#333333',
   },
-  actionContainer: {
+  urgentBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFEBEE',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    alignSelf: 'flex-start',
+  },
+  urgentText: {
+    marginLeft: 6,
+    color: '#F44336',
+    fontWeight: '500',
+  },
+  bottomActionBar: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
     flexDirection: 'row',
     alignItems: 'center',
-    padding: Sizes.lg,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
-    borderTopColor: Colors.borderLight,
+    borderTopColor: '#E0E0E0',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
-  actionButtons: {
-    flexDirection: 'row',
-    marginRight: Sizes.md,
-  },
-  actionButton: {
-    marginRight: Sizes.sm,
+  shareButton: {
+    flex: 1,
+    marginRight: 12,
+    borderRadius: 8,
+    borderColor: '#1976D2',
   },
   applyButton: {
-    flex: 1,
-    borderRadius: Sizes.radiusMd,
-  },
-  applyButtonContent: {
-    paddingVertical: Sizes.sm,
+    flex: 2,
+    borderRadius: 8,
   },
   errorContainer: {
     flex: 1,

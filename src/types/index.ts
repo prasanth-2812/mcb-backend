@@ -61,17 +61,22 @@ export type NotificationType =
 export type NotificationPriority = 'low' | 'medium' | 'high';
 
 export interface UserProfile {
-  id: string;
-  personalInfo: PersonalInfo;
-  professionalInfo: ProfessionalInfo;
-  education: Education[];
-  experience: Experience[];
-  projects: Project[];
-  certifications: Certification[];
-  resume: Resume;
-  preferences: Preferences;
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  location: string;
+  skills: string[];
+  resume: {
+    fileName: string;
+    uploaded: boolean;
+  };
   profileCompletion: number;
-  lastUpdated: string;
+  preferences: {
+    role: string;
+    location: string;
+    type: string;
+  };
 }
 
 export interface PersonalInfo {
@@ -146,9 +151,7 @@ export interface Certification {
 
 export interface Resume {
   fileName: string;
-  fileSize: string;
-  uploadDate: string;
-  url: string;
+  uploaded: boolean;
 }
 
 export interface Preferences {

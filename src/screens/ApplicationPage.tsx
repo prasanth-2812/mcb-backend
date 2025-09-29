@@ -52,9 +52,9 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ navigation, route }) 
     if (state.user) {
       setFormData(prev => ({
         ...prev,
-        fullName: `${state.user?.personalInfo.firstName || ''} ${state.user?.personalInfo.lastName || ''}`.trim(),
-        email: state.user?.personalInfo.email || '',
-        phone: state.user?.personalInfo.phone || ''
+        fullName: state.user?.name || 'User',
+        email: state.user?.email || '',
+        phone: state.user?.phone || ''
       }));
     }
   }, [route.params.jobId, state.jobs, state.user]);

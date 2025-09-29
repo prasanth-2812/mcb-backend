@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppState, AppContextType, AppAction, UserProfile, Job, Application, Notification } from '../types';
+import { loadInitialData } from '../utils/dataLoader';
 
 // Initial state
 const initialState: AppState = {
@@ -133,29 +134,44 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         AsyncStorage.getItem('theme'),
       ]);
 
-      if (user) {
-        dispatch({ type: 'SET_USER', payload: JSON.parse(user) });
+      // Load initial data if no user data exists in AsyncStorage
+      if (!user) {
+        const initialData = loadInitialData();
+        dispatch({ type: 'SET_USER', payload: initialData.user });
+        dispatch({ type: 'SET_JOBS', payload: initialData.jobs });
+        dispatch({ type: 'SET_APPLICATIONS', payload: initialData.applications });
+        dispatch({ type: 'SET_NOTIFICATIONS', payload: initialData.notifications });
+        dispatch({ type: 'SET_JOBS', payload: initialData.savedJobs });
+        dispatch({ type: 'SET_JOBS', payload: initialData.appliedJobs });
+      } else {
+        if (user) {
+          dispatch({ type: 'SET_USER', payload: JSON.parse(user) });
+        }
+        if (jobs) {
+          dispatch({ type: 'SET_JOBS', payload: JSON.parse(jobs) });
+        }
+        if (applications) {
+          dispatch({ type: 'SET_APPLICATIONS', payload: JSON.parse(applications) });
+        }
+        if (notifications) {
+          dispatch({ type: 'SET_NOTIFICATIONS', payload: JSON.parse(notifications) });
+        }
+        if (savedJobs) {
+          dispatch({ type: 'SET_JOBS', payload: JSON.parse(savedJobs) });
+        }
+        if (appliedJobs) {
+          dispatch({ type: 'SET_JOBS', payload: JSON.parse(appliedJobs) });
+        }
       }
-      if (jobs) {
-        dispatch({ type: 'SET_JOBS', payload: JSON.parse(jobs) });
-      }
-      if (applications) {
-        dispatch({ type: 'SET_APPLICATIONS', payload: JSON.parse(applications) });
-      }
-      if (notifications) {
-        dispatch({ type: 'SET_NOTIFICATIONS', payload: JSON.parse(notifications) });
-      }
-      if (savedJobs) {
-        dispatch({ type: 'SET_JOBS', payload: JSON.parse(savedJobs) });
-      }
-      if (appliedJobs) {
-        dispatch({ type: 'SET_JOBS', payload: JSON.parse(appliedJobs) });
-      }
+      
       if (theme) {
         dispatch({ type: 'SET_THEME', payload: theme as 'light' | 'dark' });
       }
     } catch (error) {
       console.error('Error loading app data:', error);
+      // Fallback to initial data if there's an error
+      const initialData = loadInitialData();
+      dispatch({ type: 'SET_USER', payload: initialData.user });
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }

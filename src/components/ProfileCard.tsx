@@ -44,37 +44,37 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
       ]}
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`Profile for ${profile.personalInfo.firstName} ${profile.personalInfo.lastName}`}
+      accessibilityLabel={`Profile for ${profile.name}`}
       accessibilityHint="Tap to view full profile"
     >
       <Card.Content style={styles.content}>
         <View style={styles.header}>
-          <Image 
-            source={{ uri: profile.personalInfo.profileImage }} 
-            style={styles.avatar}
-            accessibilityLabel="Profile picture"
-          />
+          <View style={styles.avatarPlaceholder}>
+            <Text style={styles.avatarText}>
+              {profile.name.charAt(0).toUpperCase()}
+            </Text>
+          </View>
           <View style={styles.info}>
             <Text 
               variant="titleMedium" 
               style={[styles.name, { color: isDark ? Colors.white : Colors.textPrimary }]}
               numberOfLines={1}
             >
-              {profile.personalInfo.firstName} {profile.personalInfo.lastName}
+              {profile.name}
             </Text>
             <Text 
               variant="bodyMedium" 
               style={[styles.title, { color: isDark ? Colors.gray : Colors.textSecondary }]}
               numberOfLines={1}
             >
-              {profile.professionalInfo.title}
+              {profile.preferences.role}
             </Text>
             <Text 
               variant="bodySmall" 
               style={[styles.location, { color: isDark ? Colors.gray : Colors.textSecondary }]}
               numberOfLines={1}
             >
-              {profile.personalInfo.location}
+              {profile.location}
             </Text>
           </View>
         </View>
@@ -118,7 +118,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
               Top Skills
             </Text>
             <View style={styles.skills}>
-              {profile.professionalInfo.skills.slice(0, 4).map((skill, index) => (
+              {profile.skills.slice(0, 4).map((skill, index) => (
                 <View 
                   key={index}
                   style={[
@@ -137,7 +137,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
                   </Text>
                 </View>
               ))}
-              {profile.professionalInfo.skills.length > 4 && (
+              {profile.skills.length > 4 && (
                 <View 
                   style={[
                     styles.skillChip,
@@ -151,7 +151,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
                       { color: isDark ? Colors.textPrimary : Colors.textSecondary }
                     ]}
                   >
-                    +{profile.professionalInfo.skills.length - 4}
+                    +{profile.skills.length - 4}
                   </Text>
                 </View>
               )}
@@ -187,6 +187,20 @@ const styles = StyleSheet.create({
     height: 60,
     borderRadius: 30,
     marginRight: Sizes.md,
+  },
+  avatarPlaceholder: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginRight: Sizes.md,
+    backgroundColor: '#1976D2',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
   },
   info: {
     flex: 1,

@@ -1,12 +1,14 @@
 import React, { useState, useRef } from 'react';
-import { View, StyleSheet, Dimensions } from 'react-native';
+import { View, StyleSheet, Dimensions, Image } from 'react-native';
 import { Text, Button, useTheme } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
   withTiming,
+  withSpring,
   interpolate,
   Extrapolate
 } from 'react-native-reanimated';
@@ -21,6 +23,7 @@ interface OnboardingSlide {
   id: number;
   title: string;
   description: string;
+  quote: string;
   icon: string;
   color: string;
 }
@@ -30,29 +33,33 @@ const onboardingSlides: OnboardingSlide[] = [
     id: 1,
     title: 'Find Your Dream Job',
     description: 'Discover thousands of job opportunities tailored to your skills and preferences.',
-    icon: '🎯',
-    color: Colors.primary,
+    quote: 'From small beginnings to big dreams, every job matters here.',
+    icon: 'briefcase-search-outline',
+    color: '#1976D2',
   },
   {
     id: 2,
     title: 'Track Applications',
     description: 'Keep track of all your job applications and their status in one place.',
-    icon: '📊',
-    color: Colors.secondary,
+    quote: 'Stay organized, whether it\'s a government post or your first step in a career.',
+    icon: 'file-document-outline',
+    color: '#1976D2',
   },
   {
     id: 3,
     title: 'Build Your Profile',
     description: 'Create a compelling profile that showcases your skills and experience.',
-    icon: '👤',
-    color: Colors.accent,
+    quote: 'Showcase your skills, no matter how big or small – opportunities await you.',
+    icon: 'account-circle-outline',
+    color: '#1976D2',
   },
   {
     id: 4,
     title: 'Get Notified',
     description: 'Stay updated with job matches, application updates, and career opportunities.',
-    icon: '🔔',
-    color: Colors.success,
+    quote: 'Never miss an update, because the right job can change everything.',
+    icon: 'bell-outline',
+    color: '#1976D2',
   },
 ];
 
@@ -65,9 +72,14 @@ const OnboardingScreen: React.FC = () => {
   const pagerRef = useRef<PagerView>(null);
   
   const scrollX = useSharedValue(0);
+  const iconScale = useSharedValue(1);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+    // Bounce animation for icon
+    iconScale.value = withSpring(1.2, { damping: 8, stiffness: 100 }, () => {
+      iconScale.value = withSpring(1, { damping: 8, stiffness: 100 });
+    });
   };
 
   const handleNext = () => {
@@ -112,31 +124,42 @@ const OnboardingScreen: React.FC = () => {
       };
     });
 
+    const iconAnimatedStyle = useAnimatedStyle(() => {
+      return {
+        transform: [{ scale: iconScale.value }],
+      };
+    });
+
     return (
       <Animated.View key={slide.id} style={[styles.slide, animatedStyle]}>
         <View style={styles.slideContent}>
-          <View style={[styles.iconContainer, { backgroundColor: slide.color }]}>
-            <Text style={styles.icon}>{slide.icon}</Text>
-          </View>
+          <Animated.View style={[styles.iconContainer, iconAnimatedStyle]}>
+            <MaterialCommunityIcons 
+              name={slide.icon} 
+              size={48} 
+              color="#FFFFFF" 
+            />
+          </Animated.View>
           
           <Text 
-            variant="headlineMedium" 
-            style={[
-              styles.title,
-              { color: isDark ? Colors.white : Colors.textPrimary }
-            ]}
+            variant="headlineLarge" 
+            style={styles.title}
           >
             {slide.title}
           </Text>
           
           <Text 
             variant="bodyLarge" 
-            style={[
-              styles.description,
-              { color: isDark ? Colors.gray : Colors.textSecondary }
-            ]}
+            style={styles.description}
           >
             {slide.description}
+          </Text>
+
+          <Text 
+            variant="bodyMedium" 
+            style={styles.quote}
+          >
+            "{slide.quote}"
           </Text>
         </View>
       </Animated.View>
@@ -146,41 +169,62 @@ const OnboardingScreen: React.FC = () => {
   const renderPagination = () => {
     return (
       <View style={styles.pagination}>
-        {onboardingSlides.map((_, index) => (
-          <View
-            key={index}
-            style={[
-              styles.paginationDot,
-              {
-                backgroundColor: index === currentPage 
-                  ? (isDark ? Colors.primary : Colors.primary)
-                  : (isDark ? Colors.gray : Colors.border),
-                width: index === currentPage ? 24 : 8,
-              }
-            ]}
-          />
-        ))}
+        {onboardingSlides.map((_, index) => {
+          const isActive = index === currentPage;
+          
+          const dotAnimatedStyle = useAnimatedStyle(() => {
+            const scale = withSpring(isActive ? 1.2 : 1, {
+              damping: 8,
+              stiffness: 100,
+            });
+            
+            return {
+              transform: [{ scale }],
+            };
+          });
+
+          return (
+            <Animated.View
+              key={index}
+              style={[
+                styles.paginationDot,
+                {
+                  backgroundColor: isActive ? '#1976D2' : '#E0E0E0',
+                  width: isActive ? 24 : 8,
+                },
+                dotAnimatedStyle,
+              ]}
+            />
+          );
+        })}
       </View>
     );
   };
 
   return (
-    <SafeAreaView style={[
-      styles.container,
-      { backgroundColor: isDark ? Colors.background : Colors.background }
-    ]}>
-      <StatusBar style={isDark ? 'light' : 'dark'} />
+    <SafeAreaView style={styles.container}>
+      <StatusBar style="dark" />
       
+      {/* Header with Logo and Skip Button */}
       <View style={styles.header}>
+        <View style={styles.logoContainer}>
+          <Image 
+            source={require('../../assets/logo.png')} 
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </View>
         <Button 
           mode="text" 
           onPress={handleSkip}
-          textColor={isDark ? Colors.gray : Colors.textSecondary}
+          textColor="#1976D2"
+          style={styles.skipButton}
         >
           Skip
         </Button>
       </View>
 
+      {/* PagerView */}
       <PagerView
         ref={pagerRef}
         style={styles.pager}
@@ -193,6 +237,7 @@ const OnboardingScreen: React.FC = () => {
         {onboardingSlides.map((slide, index) => renderSlide(slide, index))}
       </PagerView>
 
+      {/* Footer with Pagination and Buttons */}
       <View style={styles.footer}>
         {renderPagination()}
         
@@ -202,7 +247,8 @@ const OnboardingScreen: React.FC = () => {
               mode="contained"
               onPress={handleNext}
               style={styles.nextButton}
-              buttonColor={isDark ? Colors.primary : Colors.primary}
+              buttonColor="#1976D2"
+              contentStyle={styles.buttonContent}
             >
               Next
             </Button>
@@ -211,7 +257,8 @@ const OnboardingScreen: React.FC = () => {
               mode="contained"
               onPress={handleGetStarted}
               style={styles.getStartedButton}
-              buttonColor={isDark ? Colors.primary : Colors.primary}
+              buttonColor="#1976D2"
+              contentStyle={styles.buttonContent}
             >
               Get Started
             </Button>
@@ -225,12 +272,26 @@ const OnboardingScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#FFFFFF',
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
-    paddingHorizontal: Sizes.lg,
-    paddingVertical: Sizes.md,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: '#FFFFFF',
+  },
+  logoContainer: {
+    flex: 1,
+    alignItems: 'flex-start',
+  },
+  logo: {
+    width: 120,
+    height: 40,
+  },
+  skipButton: {
+    marginLeft: 16,
   },
   pager: {
     flex: 1,
@@ -239,11 +300,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: Sizes.xl,
+    paddingHorizontal: 32,
   },
   slideContent: {
     alignItems: 'center',
-    maxWidth: 300,
+    maxWidth: 320,
   },
   iconContainer: {
     width: 120,
@@ -251,37 +312,50 @@ const styles = StyleSheet.create({
     borderRadius: 60,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: Sizes.xxl,
-    elevation: Sizes.elevation3,
-    shadowColor: Colors.shadow,
+    marginBottom: 32,
+    elevation: 8,
+    shadowColor: '#1976D2',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 6,
     },
     shadowOpacity: 0.3,
-    shadowRadius: 8,
-  },
-  icon: {
-    fontSize: 48,
+    shadowRadius: 12,
+    // Gradient background
+    backgroundColor: '#1976D2',
   },
   title: {
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: Sizes.lg,
+    marginBottom: 16,
+    color: '#333333',
+    fontSize: 28,
   },
   description: {
     textAlign: 'center',
     lineHeight: 24,
+    marginBottom: 20,
+    color: '#666666',
+    fontSize: 16,
+  },
+  quote: {
+    textAlign: 'center',
+    lineHeight: 22,
+    color: '#1976D2',
+    fontSize: 14,
+    fontStyle: 'italic',
+    paddingHorizontal: 20,
   },
   footer: {
-    paddingHorizontal: Sizes.lg,
-    paddingBottom: Sizes.xl,
+    paddingHorizontal: 20,
+    paddingBottom: 32,
+    backgroundColor: '#FFFFFF',
   },
   pagination: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: Sizes.xl,
+    marginBottom: 32,
   },
   paginationDot: {
     height: 8,
@@ -289,13 +363,32 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   buttonContainer: {
-    // Additional styles if needed
+    width: '100%',
   },
   nextButton: {
-    borderRadius: Sizes.radiusMd,
+    borderRadius: 12,
+    elevation: 4,
+    shadowColor: '#1976D2',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
   getStartedButton: {
-    borderRadius: Sizes.radiusMd,
+    borderRadius: 12,
+    elevation: 4,
+    shadowColor: '#1976D2',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  buttonContent: {
+    paddingVertical: 12,
   },
 });
 

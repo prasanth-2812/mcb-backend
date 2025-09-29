@@ -18,8 +18,8 @@ const ProfileScreen: React.FC = () => {
   const { state, updateProfile, toggleTheme, logout } = useApp();
   const isDark = state.theme === 'dark';
   
-  const [resumeUploaded, setResumeUploaded] = useState(false);
-  const [resumeFileName, setResumeFileName] = useState('');
+  const [resumeUploaded, setResumeUploaded] = useState(state.user?.resume?.uploaded || false);
+  const [resumeFileName, setResumeFileName] = useState(state.user?.resume?.fileName || '');
   
   const contentOpacity = useSharedValue(0);
   const headerScale = useSharedValue(0.8);
@@ -29,6 +29,14 @@ const ProfileScreen: React.FC = () => {
     contentOpacity.value = withTiming(1, { duration: 600 });
     headerScale.value = withSpring(1, { damping: 15, stiffness: 150 });
   }, []);
+
+  useEffect(() => {
+    // Sync resume state with user data
+    if (state.user?.resume) {
+      setResumeUploaded(state.user.resume.uploaded);
+      setResumeFileName(state.user.resume.fileName);
+    }
+  }, [state.user]);
 
   const contentAnimatedStyle = useAnimatedStyle(() => ({
     opacity: contentOpacity.value,
@@ -45,6 +53,16 @@ const ProfileScreen: React.FC = () => {
   const handleResumeUpload = () => {
     setResumeUploaded(true);
     setResumeFileName('John_Doe_Resume.pdf');
+    // Update the user state with new resume info
+    if (state.user) {
+      updateProfile({
+        ...state.user,
+        resume: {
+          fileName: 'John_Doe_Resume.pdf',
+          uploaded: true
+        }
+      });
+    }
     console.log('Resume uploaded');
   };
 
@@ -63,6 +81,18 @@ const ProfileScreen: React.FC = () => {
   const handleLogout = () => {
     logout();
   };
+
+  if (state.isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="dark-content" backgroundColor="#F9F9F9" />
+        <View style={styles.errorContainer}>
+          <MaterialCommunityIcons name="loading" size={48} color="#B0BEC5" />
+          <Text variant="headlineSmall" style={styles.errorText}>Loading profile...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   if (!state.user) {
     return (
@@ -99,10 +129,10 @@ const ProfileScreen: React.FC = () => {
               </TouchableOpacity>
             </View>
             <Text variant="headlineMedium" style={styles.userName}>
-              {state.user.personalInfo.firstName} {state.user.personalInfo.lastName}
+              {state.user?.name || 'User Name'}
             </Text>
             <Text variant="bodyLarge" style={styles.userTitle}>
-              {state.user.professionalInfo.title}
+              {state.user?.preferences?.role || 'Job Title'}
             </Text>
           </Animated.View>
 
@@ -114,7 +144,7 @@ const ProfileScreen: React.FC = () => {
                   <MaterialCommunityIcons name="email-outline" size={20} color="#1976D2" />
                   <View style={styles.infoText}>
                     <Text variant="bodySmall" style={styles.infoLabel}>Email</Text>
-                    <Text variant="bodyMedium" style={styles.infoValue}>{state.user.personalInfo.email}</Text>
+                    <Text variant="bodyMedium" style={styles.infoValue}>{state.user?.email || 'No email provided'}</Text>
                   </View>
                 </View>
               </View>
@@ -124,7 +154,17 @@ const ProfileScreen: React.FC = () => {
                   <MaterialCommunityIcons name="phone-outline" size={20} color="#1976D2" />
                   <View style={styles.infoText}>
                     <Text variant="bodySmall" style={styles.infoLabel}>Phone</Text>
-                    <Text variant="bodyMedium" style={styles.infoValue}>{state.user.personalInfo.phone}</Text>
+                    <Text variant="bodyMedium" style={styles.infoValue}>{state.user?.phone || 'No phone provided'}</Text>
+                  </View>
+                </View>
+              </View>
+
+              <View style={styles.infoRow}>
+                <View style={styles.infoItem}>
+                  <MaterialCommunityIcons name="map-marker-outline" size={20} color="#1976D2" />
+                  <View style={styles.infoText}>
+                    <Text variant="bodySmall" style={styles.infoLabel}>Location</Text>
+                    <Text variant="bodyMedium" style={styles.infoValue}>{state.user?.location || 'No location provided'}</Text>
                   </View>
                 </View>
               </View>
@@ -139,11 +179,14 @@ const ProfileScreen: React.FC = () => {
                   Profile Completion
                 </Text>
                 <Text variant="bodyMedium" style={styles.completionPercentage}>
-                  {Math.round((state.user.profileCompletion || 0.3) * 100)}%
+                  {state.user?.profileCompletion || 0}%
                 </Text>
               </View>
+              <Text variant="bodyMedium" style={styles.completionText}>
+                Your profile is {state.user?.profileCompletion || 0}% complete
+              </Text>
               <ProgressBar 
-                progress={state.user.profileCompletion || 0.3} 
+                progress={(state.user?.profileCompletion || 0) / 100} 
                 color="#1976D2"
                 style={styles.progressBar}
               />
@@ -154,7 +197,7 @@ const ProfileScreen: React.FC = () => {
                 textColor="#1976D2"
                 icon={() => <MaterialCommunityIcons name="account-check-outline" size={20} color="#1976D2" />}
               >
-                Complete your profile
+                Complete Profile
               </Button>
             </Card.Content>
           </Card>
@@ -169,15 +212,26 @@ const ProfileScreen: React.FC = () => {
                 <MaterialCommunityIcons name="file-document-outline" size={24} color="#1976D2" />
               </View>
               
-              {resumeUploaded ? (
+              {state.user?.resume?.uploaded ? (
                 <View style={styles.resumeUploaded}>
                   <View style={styles.resumeFile}>
                     <MaterialCommunityIcons name="file-document-outline" size={24} color="#1976D2" />
-                    <Text variant="bodyMedium" style={styles.resumeFileName}>{resumeFileName}</Text>
+                    <View style={styles.resumeFileInfo}>
+                      <Text variant="bodyMedium" style={styles.resumeFileName}>{state.user.resume.fileName}</Text>
+                      <Text variant="bodySmall" style={styles.resumeDate}>Last updated: Feb 1, 2024</Text>
+                    </View>
                   </View>
                   <Button
                     mode="text"
-                    onPress={() => setResumeUploaded(false)}
+                    onPress={() => {
+                      setResumeUploaded(false);
+                      if (state.user) {
+                        updateProfile({
+                          ...state.user,
+                          resume: { fileName: "", uploaded: false }
+                        });
+                      }
+                    }}
                     textColor="#1976D2"
                   >
                     Replace
@@ -210,7 +264,7 @@ const ProfileScreen: React.FC = () => {
               </View>
               
               <View style={styles.skillsContainer}>
-                {state.user.professionalInfo.skills.map((skill, index) => (
+                {(state.user?.skills || []).map((skill, index) => (
                   <Chip 
                     key={index}
                     style={styles.skillChip}
@@ -220,6 +274,51 @@ const ProfileScreen: React.FC = () => {
                     {skill}
                   </Chip>
                 ))}
+              </View>
+            </Card.Content>
+          </Card>
+
+          {/* Career Preferences Section */}
+          <Card style={styles.preferencesCard}>
+            <Card.Content style={styles.preferencesContent}>
+              <Text variant="titleMedium" style={styles.preferencesTitle}>
+                Career Preferences
+              </Text>
+              
+              <View style={styles.preferenceItem}>
+                <View style={styles.preferenceLeft}>
+                  <MaterialCommunityIcons name="briefcase-outline" size={24} color="#1976D2" />
+                  <View style={styles.preferenceText}>
+                    <Text variant="bodySmall" style={styles.preferenceLabel}>Desired Role</Text>
+                    <Text variant="bodyMedium" style={styles.preferenceValue}>
+                      {state.user?.preferences?.role || 'Not specified'}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+
+              <View style={styles.preferenceItem}>
+                <View style={styles.preferenceLeft}>
+                  <MaterialCommunityIcons name="map-marker-outline" size={24} color="#1976D2" />
+                  <View style={styles.preferenceText}>
+                    <Text variant="bodySmall" style={styles.preferenceLabel}>Preferred Location</Text>
+                    <Text variant="bodyMedium" style={styles.preferenceValue}>
+                      {state.user?.preferences?.location || 'Not specified'}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+
+              <View style={styles.preferenceItem}>
+                <View style={styles.preferenceLeft}>
+                  <MaterialCommunityIcons name="clock-outline" size={24} color="#1976D2" />
+                  <View style={styles.preferenceText}>
+                    <Text variant="bodySmall" style={styles.preferenceLabel}>Job Type</Text>
+                    <Text variant="bodyMedium" style={styles.preferenceValue}>
+                      {state.user?.preferences?.type || 'Not specified'}
+                    </Text>
+                  </View>
+                </View>
               </View>
             </Card.Content>
           </Card>
@@ -396,6 +495,11 @@ const styles = StyleSheet.create({
     color: '#1976D2',
     fontWeight: '600',
   },
+  completionText: {
+    color: '#666666',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
   progressBar: {
     height: 8,
     borderRadius: 4,
@@ -437,10 +541,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flex: 1,
   },
-  resumeFileName: {
+  resumeFileInfo: {
     marginLeft: 8,
-    color: '#1A1A1A',
     flex: 1,
+  },
+  resumeFileName: {
+    color: '#1A1A1A',
+    fontWeight: '500',
+  },
+  resumeDate: {
+    color: '#666666',
+    marginTop: 2,
   },
   uploadButton: {
     borderColor: '#1976D2',
@@ -483,6 +594,43 @@ const styles = StyleSheet.create({
   },
   skillChipText: {
     color: '#1976D2',
+    fontWeight: '500',
+  },
+  preferencesCard: {
+    backgroundColor: '#FFFFFF',
+    marginBottom: 16,
+    borderRadius: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  preferencesContent: {
+    padding: 20,
+  },
+  preferencesTitle: {
+    color: '#1A1A1A',
+    fontWeight: '600',
+    marginBottom: 16,
+  },
+  preferenceItem: {
+    marginBottom: 16,
+  },
+  preferenceLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  preferenceText: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  preferenceLabel: {
+    color: '#666666',
+    marginBottom: 2,
+  },
+  preferenceValue: {
+    color: '#1A1A1A',
     fontWeight: '500',
   },
   settingsCard: {

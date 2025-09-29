@@ -189,7 +189,7 @@ const HomeScreen: React.FC = () => {
                 variant="headlineMedium" 
                 style={styles.greeting}
               >
-                {getGreeting()}, {state.user?.personalInfo.firstName || 'User'}!
+                {getGreeting()}, {state.user?.name || 'User'}!
               </Text>
               <Text 
                 variant="bodyLarge" 

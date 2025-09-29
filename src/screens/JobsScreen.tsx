@@ -8,7 +8,7 @@ import { Colors } from '../constants/colors';
 import { Sizes } from '../constants/sizes';
 import JobCard from '../components/JobCard';
 import SearchBar from '../components/SearchBar';
-import SimpleFilterModal from '../components/SimpleFilterModal';
+import FilterJobsModal from '../components/FilterJobsModal';
 import { Job, FilterOptions } from '../types';
 import jobsData from '../data/jobs.json';
 
@@ -35,6 +35,7 @@ const JobsScreen: React.FC<JobsScreenProps> = ({ navigation }) => {
     remote: null,
     companySize: [],
   });
+  const [showUrgentOnly, setShowUrgentOnly] = useState(false);
 
   useEffect(() => {
     // Load jobs if not already loaded
@@ -72,8 +73,13 @@ const JobsScreen: React.FC<JobsScreenProps> = ({ navigation }) => {
       filtered = filtered.filter(job => job.isRemote === filters.remote);
     }
 
+    // Apply urgency filter
+    if (showUrgentOnly) {
+      filtered = filtered.filter(job => job.isUrgent === true);
+    }
+
     setFilteredJobs(filtered);
-  }, [state.jobs, searchQuery, filters]);
+  }, [state.jobs, searchQuery, filters, showUrgentOnly]);
 
   useEffect(() => {
     // Set recommended jobs (first 3 jobs for now)
@@ -94,6 +100,10 @@ const JobsScreen: React.FC<JobsScreenProps> = ({ navigation }) => {
     setShowFilters(false);
   };
 
+  const handleUrgencyToggle = (urgent: boolean) => {
+    setShowUrgentOnly(urgent);
+  };
+
   const handleFilterClear = () => {
     setFilters({
       jobType: [],
@@ -103,6 +113,7 @@ const JobsScreen: React.FC<JobsScreenProps> = ({ navigation }) => {
       remote: null,
       companySize: [],
     });
+    setShowUrgentOnly(false);
     setSearchQuery('');
   };
 
@@ -113,7 +124,7 @@ const JobsScreen: React.FC<JobsScreenProps> = ({ navigation }) => {
 
   const getJobMatchPercentage = (job: Job) => {
     // Simulate match calculation based on user skills and job requirements
-    const userSkills = state.user?.professionalInfo?.skills || [];
+    const userSkills = state.user?.skills || [];
     const jobTags = job.tags || [];
     const matchingSkills = userSkills.filter((skill: string) => 
       jobTags.some((tag: string) => tag.toLowerCase().includes(skill.toLowerCase()))
@@ -462,6 +473,9 @@ const JobsScreen: React.FC<JobsScreenProps> = ({ navigation }) => {
     if (filters.location.length > 0) count++;
     if (filters.remote !== null) count++;
     if (filters.salaryRange[0] > 0 || filters.salaryRange[1] < 200000) count++;
+    if (filters.experience.length > 0) count++;
+    if (filters.companySize.length > 0) count++;
+    if (showUrgentOnly) count++;
     return count;
   };
 
@@ -512,7 +526,7 @@ const JobsScreen: React.FC<JobsScreenProps> = ({ navigation }) => {
                 activeOpacity={0.8}
               >
                 <MaterialCommunityIcons 
-                  name="tune" 
+                  name="filter-variant" 
                   size={20} 
                   color={getActiveFiltersCount() > 0 ? "#FFFFFF" : "#666666"} 
                 />
@@ -580,12 +594,14 @@ const JobsScreen: React.FC<JobsScreenProps> = ({ navigation }) => {
         </View>
       </ScrollView>
 
-      {/* Simple Filter Modal */}
-      <SimpleFilterModal
+      {/* Filter Jobs Modal */}
+      <FilterJobsModal
         visible={showFilters}
         onDismiss={() => setShowFilters(false)}
         onApply={handleFilterApply}
-        filters={filters}
+        initialFilters={filters}
+        showUrgentOnly={showUrgentOnly}
+        onUrgencyToggle={handleUrgencyToggle}
       />
 
       {/* FAB */}

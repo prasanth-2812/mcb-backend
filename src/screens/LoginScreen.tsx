@@ -28,50 +28,22 @@ const LoginScreen: React.FC = () => {
     // Simulate API call
     setTimeout(() => {
       login({
-        id: '1',
-        personalInfo: {
-          firstName: 'John',
-          lastName: 'Doe',
-          email: email,
-          phone: '+1234567890',
-          location: 'New York, NY',
-          profileImage: '',
-          bio: 'Software Developer',
-        },
-        professionalInfo: {
-          title: 'Software Developer',
-          experience: '5 years',
-          skills: ['React', 'Node.js', 'TypeScript'],
-          availability: 'Full-time',
-          expectedSalary: '$80,000 - $100,000',
-          workType: ['Remote'],
-          languages: [{ language: 'English', proficiency: 'Native' }],
-        },
-        education: [],
-        experience: [],
-        projects: [],
-        certifications: [],
+        id: 1,
+        name: 'John Doe',
+        email: email,
+        phone: '+1234567890',
+        location: 'New York, NY',
+        skills: ['React', 'Node.js', 'TypeScript'],
         resume: {
           fileName: '',
-          fileSize: '',
-          uploadDate: '',
-          url: '',
-        },
-        preferences: {
-          jobTypes: ['Full-time'],
-          workArrangement: ['Remote'],
-          industries: ['Technology'],
-          companySize: ['Medium'],
-          notificationSettings: {
-            emailNotifications: true,
-            pushNotifications: true,
-            jobMatches: true,
-            applicationUpdates: true,
-            weeklyDigest: true,
-          },
+          uploaded: false,
         },
         profileCompletion: 75,
-        lastUpdated: new Date().toISOString(),
+        preferences: {
+          role: 'Software Developer',
+          location: 'New York, NY',
+          type: 'Full-time',
+        },
       });
       setIsLoading(false);
     }, 1500);
