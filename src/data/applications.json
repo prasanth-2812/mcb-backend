@@ -10,7 +10,7 @@
       {
         "status": "applied",
         "date": "2024-01-16",
-        "note": "Application submitted successfully"
+        "description": "Application submitted successfully"
       }
     ],
     "nextStep": "Application under review",
@@ -30,12 +30,12 @@
       {
         "status": "applied",
         "date": "2024-01-21",
-        "note": "Application submitted"
+        "description": "Application submitted"
       },
       {
         "status": "shortlisted",
         "date": "2024-01-25",
-        "note": "Application reviewed and shortlisted for interview"
+        "description": "Application reviewed and shortlisted for interview"
       }
     ],
     "nextStep": "Technical interview scheduled",
@@ -55,17 +55,17 @@
       {
         "status": "applied",
         "date": "2024-01-19",
-        "note": "Application submitted"
+        "description": "Application submitted"
       },
       {
         "status": "shortlisted",
         "date": "2024-01-22",
-        "note": "Application shortlisted"
+        "description": "Application shortlisted"
       },
       {
         "status": "interview",
         "date": "2024-01-26",
-        "note": "Interview scheduled"
+        "description": "Interview scheduled"
       }
     ],
     "nextStep": "Final interview with team lead",
@@ -85,17 +85,17 @@
       {
         "status": "applied",
         "date": "2024-01-23",
-        "note": "Application submitted"
+        "description": "Application submitted"
       },
       {
         "status": "shortlisted",
         "date": "2024-01-26",
-        "note": "Application reviewed"
+        "description": "Application reviewed"
       },
       {
         "status": "rejected",
         "date": "2024-01-30",
-        "note": "Not selected for this position"
+        "description": "Not selected for this position"
       }
     ],
     "nextStep": "Application closed",
@@ -115,7 +115,7 @@
       {
         "status": "applied",
         "date": "2024-01-26",
-        "note": "Application submitted"
+        "description": "Application submitted"
       }
     ],
     "nextStep": "Application under review",
@@ -135,12 +135,12 @@
       {
         "status": "applied",
         "date": "2024-01-29",
-        "note": "Application submitted"
+        "description": "Application submitted"
       },
       {
         "status": "shortlisted",
         "date": "2024-02-01",
-        "note": "Application shortlisted for next round"
+        "description": "Application shortlisted for next round"
       }
     ],
     "nextStep": "Phone screening scheduled",

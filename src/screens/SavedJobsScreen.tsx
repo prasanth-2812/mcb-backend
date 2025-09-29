@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, FlatList, StatusBar, TouchableOpacity } from 'react-native';
 import { Text, Card, Chip, useTheme, Button, IconButton } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
@@ -18,6 +19,7 @@ import jobsData from '../data/jobs.json';
 
 const SavedJobsScreen: React.FC = () => {
   const theme = useTheme();
+  const navigation = useNavigation();
   const { state, dispatch, unsaveJob } = useApp();
   const isDark = state.theme === 'dark';
   
@@ -72,6 +74,23 @@ const SavedJobsScreen: React.FC = () => {
     });
   };
 
+  const handleJobPress = (job: Job) => {
+    (navigation as any).navigate('JobDetails', { jobId: job.id });
+  };
+
+  const handleJobApply = (job: Job) => {
+    // Handle job application
+    console.log('Applying to job:', job.id);
+  };
+
+  const handleJobSave = (job: Job) => {
+    if (state.savedJobs.includes(job.id)) {
+      unsaveJob(job.id);
+    } else {
+      dispatch({ type: 'SAVE_JOB', payload: job.id });
+    }
+  };
+
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
@@ -83,11 +102,12 @@ const SavedJobsScreen: React.FC = () => {
 
   const renderJobItem = ({ item }: { item: Job }) => (
     <Animated.View style={contentAnimatedStyle}>
-      <Card style={[
-        styles.jobCard,
-        { backgroundColor: isDark ? Colors.darkGray : Colors.white }
-      ]}>
-        <Card.Content style={styles.jobContent}>
+      <TouchableOpacity onPress={() => handleJobPress(item)}>
+        <Card style={[
+          styles.jobCard,
+          { backgroundColor: isDark ? Colors.darkGray : Colors.white }
+        ]}>
+          <Card.Content style={styles.jobContent}>
           <View style={styles.jobHeader}>
             <View style={styles.jobInfo}>
               <Text 
@@ -208,7 +228,7 @@ const SavedJobsScreen: React.FC = () => {
           <View style={styles.jobActions}>
             <Button
               mode="outlined"
-              onPress={() => console.log('View job:', item.id)}
+              onPress={() => handleJobPress(item)}
               style={styles.viewButton}
               textColor="#1976D2"
             >
@@ -216,7 +236,7 @@ const SavedJobsScreen: React.FC = () => {
             </Button>
             <Button
               mode="contained"
-              onPress={() => console.log('Apply to job:', item.id)}
+              onPress={() => handleJobApply(item)}
               style={styles.applyButton}
               buttonColor="#1976D2"
             >
@@ -225,6 +245,7 @@ const SavedJobsScreen: React.FC = () => {
           </View>
         </Card.Content>
       </Card>
+      </TouchableOpacity>
     </Animated.View>
   );
 

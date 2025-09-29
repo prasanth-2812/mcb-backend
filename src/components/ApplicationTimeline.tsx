@@ -193,10 +193,10 @@ const ApplicationTimeline: React.FC<ApplicationTimelineProps> = ({
                     </TouchableOpacity>
                   </View>
                   
-                  {isExpanded && item.note && (
+                  {isExpanded && item.description && (
                     <View style={styles.timelineNote}>
                       <Text variant="bodySmall" style={styles.noteText}>
-                        {item.note}
+                        {item.description}
                       </Text>
                     </View>
                   )}

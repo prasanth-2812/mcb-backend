@@ -26,7 +26,7 @@
     "deadline": "2024-02-15",
     "isUrgent": false,
     "isRemote": true,
-    "companyLogo": "https://via.placeholder.com/60x60/1976D2/FFFFFF?text=TC",
+    "companyLogo": "https://img.icons8.com/color/60/000000/tech-corp.png",
     "tags": ["React Native", "JavaScript", "Mobile", "Remote"]
   },
   {
@@ -56,7 +56,7 @@
     "deadline": "2024-02-20",
     "isUrgent": true,
     "isRemote": false,
-    "companyLogo": "https://via.placeholder.com/60x60/4CAF50/FFFFFF?text=SX",
+    "companyLogo": "https://img.icons8.com/color/60/000000/startup.png",
     "tags": ["React", "JavaScript", "CSS", "Frontend"]
   },
   {
@@ -86,7 +86,7 @@
     "deadline": "2024-02-18",
     "isUrgent": false,
     "isRemote": true,
-    "companyLogo": "https://via.placeholder.com/60x60/FF9800/FFFFFF?text=ES",
+    "companyLogo": "https://img.icons8.com/color/60/000000/enterprise.png",
     "tags": ["Full Stack", "Node.js", "React", "Database"]
   },
   {
@@ -116,7 +116,7 @@
     "deadline": "2024-02-22",
     "isUrgent": false,
     "isRemote": true,
-    "companyLogo": "https://via.placeholder.com/60x60/9C27B0/FFFFFF?text=DS",
+    "companyLogo": "https://img.icons8.com/color/60/000000/design.png",
     "tags": ["UI/UX", "Figma", "Design", "Remote"]
   },
   {
@@ -146,7 +146,7 @@
     "deadline": "2024-02-25",
     "isUrgent": true,
     "isRemote": true,
-    "companyLogo": "https://via.placeholder.com/60x60/00BCD4/FFFFFF?text=CT",
+    "companyLogo": "https://img.icons8.com/color/60/000000/cloud.png",
     "tags": ["DevOps", "AWS", "Docker", "Cloud"]
   },
   {
@@ -176,7 +176,7 @@
     "deadline": "2024-02-28",
     "isUrgent": false,
     "isRemote": false,
-    "companyLogo": "https://via.placeholder.com/60x60/E91E63/FFFFFF?text=IL",
+    "companyLogo": "https://img.icons8.com/color/60/000000/innovation.png",
     "tags": ["Product Management", "Agile", "Leadership", "Strategy"]
   }
 ]

@@ -141,8 +141,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         dispatch({ type: 'SET_JOBS', payload: initialData.jobs });
         dispatch({ type: 'SET_APPLICATIONS', payload: initialData.applications });
         dispatch({ type: 'SET_NOTIFICATIONS', payload: initialData.notifications });
-        dispatch({ type: 'SET_JOBS', payload: initialData.savedJobs });
-        dispatch({ type: 'SET_JOBS', payload: initialData.appliedJobs });
+        // Note: savedJobs and appliedJobs are arrays of strings, not jobs
+        // They should be handled separately if needed
       } else {
         if (user) {
           dispatch({ type: 'SET_USER', payload: JSON.parse(user) });
@@ -157,10 +157,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           dispatch({ type: 'SET_NOTIFICATIONS', payload: JSON.parse(notifications) });
         }
         if (savedJobs) {
-          dispatch({ type: 'SET_JOBS', payload: JSON.parse(savedJobs) });
+          // savedJobs is an array of job IDs, not jobs
+          // This should be handled by a different action if needed
         }
         if (appliedJobs) {
-          dispatch({ type: 'SET_JOBS', payload: JSON.parse(appliedJobs) });
+          // appliedJobs is an array of job IDs, not jobs  
+          // This should be handled by a different action if needed
         }
       }
       

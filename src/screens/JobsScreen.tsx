@@ -119,7 +119,7 @@ const JobsScreen: React.FC<JobsScreenProps> = ({ navigation }) => {
 
   const handleApplyToJob = (job: Job) => {
     // Navigate to Job Details page
-    navigation.navigate('JobDetailsPage', { jobId: job.id });
+    (navigation as any).navigate('JobDetails', { jobId: job.id });
   };
 
   const getJobMatchPercentage = (job: Job) => {
@@ -235,11 +235,14 @@ const JobsScreen: React.FC<JobsScreenProps> = ({ navigation }) => {
                     source={{ uri: job.companyLogo }} 
                     style={styles.jobLogo}
                     resizeMode="cover"
+                    onError={() => {
+                      console.log('Failed to load company logo:', job.companyLogo);
+                    }}
                   />
                 ) : (
                   <View style={styles.jobLogoPlaceholder}>
                     <Text style={styles.jobLogoText}>
-                      {job.company.charAt(0).toUpperCase()}
+                      {job.company?.charAt(0)?.toUpperCase() || '?'}
                     </Text>
                   </View>
                 )}
@@ -354,11 +357,14 @@ const JobsScreen: React.FC<JobsScreenProps> = ({ navigation }) => {
                     source={{ uri: job.companyLogo }} 
                     style={styles.jobLogo}
                     resizeMode="cover"
+                    onError={() => {
+                      console.log('Failed to load company logo:', job.companyLogo);
+                    }}
                   />
                 ) : (
                   <View style={styles.jobLogoPlaceholder}>
                     <Text style={styles.jobLogoText}>
-                      {job.company.charAt(0).toUpperCase()}
+                      {job.company?.charAt(0)?.toUpperCase() || '?'}
                     </Text>
                   </View>
                 )}
@@ -979,7 +985,7 @@ const styles = StyleSheet.create({
   },
   fabContainer: {
     position: 'absolute',
-    bottom: 20,
+    bottom: 34, // Extra padding for mobile navigation
     right: 20,
   },
   fab: {

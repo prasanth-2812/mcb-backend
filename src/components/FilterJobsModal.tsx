@@ -12,12 +12,6 @@ import {
   Switch
 } from 'react-native-paper';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
-  withSpring, 
-  withTiming
-} from 'react-native-reanimated';
 import { FilterOptions } from '../types';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
@@ -44,19 +38,6 @@ const FilterJobsModal: React.FC<FilterJobsModalProps> = ({
   const [locationInput, setLocationInput] = useState('');
   const [localShowUrgentOnly, setLocalShowUrgentOnly] = useState(showUrgentOnly);
   
-  // Animation values
-  const modalScale = useSharedValue(0);
-  const modalOpacity = useSharedValue(0);
-
-  useEffect(() => {
-    if (visible) {
-      modalScale.value = withSpring(1, { damping: 15, stiffness: 150 });
-      modalOpacity.value = withTiming(1, { duration: 300 });
-    } else {
-      modalScale.value = withTiming(0, { duration: 200 });
-      modalOpacity.value = withTiming(0, { duration: 200 });
-    }
-  }, [visible]);
 
   useEffect(() => {
     setLocalFilters(initialFilters);
@@ -152,10 +133,6 @@ const FilterJobsModal: React.FC<FilterJobsModalProps> = ({
     return count;
   };
 
-  const animatedModalStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: modalScale.value }],
-    opacity: modalOpacity.value,
-  }));
 
   const renderFilterSection = (title: string, children: React.ReactNode) => (
     <View style={styles.filterSection}>
@@ -172,7 +149,7 @@ const FilterJobsModal: React.FC<FilterJobsModalProps> = ({
       onDismiss={onDismiss}
       contentContainerStyle={styles.modalContainer}
     >
-      <Animated.View style={[styles.modalContent, animatedModalStyle]}>
+      <View style={styles.modalContent}>
         <Card style={styles.modalCard}>
           {/* Header */}
           <View style={styles.header}>
@@ -404,7 +381,7 @@ const FilterJobsModal: React.FC<FilterJobsModalProps> = ({
             </Button>
           </View>
         </Card>
-      </Animated.View>
+      </View>
     </Modal>
   );
 };

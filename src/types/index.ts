@@ -29,6 +29,7 @@ export interface Application {
   interviewDate: string | null;
   salary: string;
   location: string;
+  nextStep?: string;
 }
 
 export type ApplicationStatus = 'applied' | 'shortlisted' | 'interview' | 'rejected' | 'accepted';
@@ -52,10 +53,19 @@ export interface Notification {
 
 export type NotificationType = 
   | 'application_update' 
+  | 'application'
   | 'interview' 
   | 'job_match' 
   | 'application_rejected' 
   | 'profile_reminder' 
+  | 'profile'
+  | 'recommendation'
+  | 'deadline'
+  | 'rejection'
+  | 'company'
+  | 'assessment'
+  | 'tip'
+  | 'digest'
   | 'weekly_digest';
 
 export type NotificationPriority = 'low' | 'medium' | 'high';
@@ -69,6 +79,10 @@ export interface UserProfile {
   skills: string[];
   resume: {
     fileName: string;
+    uploaded: boolean;
+  };
+  profilePicture: {
+    uri: string;
     uploaded: boolean;
   };
   profileCompletion: number;
@@ -180,7 +194,7 @@ export interface AppState {
   isAuthenticated: boolean;
   isLoading: boolean;
   theme: 'light' | 'dark';
-  currentScreen: 'onboarding' | 'login' | 'signup' | 'main';
+  currentScreen: 'onboarding' | 'login' | 'signup' | 'forgot-password' | 'main';
 }
 
 export interface AppContextType {
@@ -194,7 +208,7 @@ export interface AppContextType {
   markNotificationAsRead: (notificationId: string) => void;
   updateProfile: (profile: Partial<UserProfile>) => void;
   toggleTheme: () => void;
-  navigateToScreen: (screen: 'onboarding' | 'login' | 'signup' | 'main') => void;
+  navigateToScreen: (screen: 'onboarding' | 'login' | 'signup' | 'forgot-password' | 'main') => void;
 }
 
 export type AppAction =

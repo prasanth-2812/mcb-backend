@@ -1,13 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, StatusBar, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ScrollView, StatusBar, TouchableOpacity, Image, Alert } from 'react-native';
 import { Text, Button, Card, useTheme, Switch, Divider, Chip, ProgressBar, Avatar } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
-  withSpring,
-  withTiming 
-} from 'react-native-reanimated';
+import { useNavigation } from '@react-navigation/native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useApp } from '../context/AppContext';
 import { Colors } from '../constants/colors';
@@ -15,39 +10,98 @@ import { Sizes } from '../constants/sizes';
 
 const ProfileScreen: React.FC = () => {
   const theme = useTheme();
+  const navigation = useNavigation();
   const { state, updateProfile, toggleTheme, logout } = useApp();
   const isDark = state.theme === 'dark';
   
   const [resumeUploaded, setResumeUploaded] = useState(state.user?.resume?.uploaded || false);
   const [resumeFileName, setResumeFileName] = useState(state.user?.resume?.fileName || '');
+  const [profilePicture, setProfilePicture] = useState(state.user?.profilePicture?.uri || '');
+  const [profilePictureUploaded, setProfilePictureUploaded] = useState(state.user?.profilePicture?.uploaded || false);
   
-  const contentOpacity = useSharedValue(0);
-  const headerScale = useSharedValue(0.8);
 
   useEffect(() => {
-    // Animate content entrance
-    contentOpacity.value = withTiming(1, { duration: 600 });
-    headerScale.value = withSpring(1, { damping: 15, stiffness: 150 });
-  }, []);
-
-  useEffect(() => {
-    // Sync resume state with user data
+    // Sync resume and profile picture state with user data
     if (state.user?.resume) {
       setResumeUploaded(state.user.resume.uploaded);
       setResumeFileName(state.user.resume.fileName);
     }
+    if (state.user?.profilePicture) {
+      setProfilePicture(state.user.profilePicture.uri);
+      setProfilePictureUploaded(state.user.profilePicture.uploaded);
+    }
   }, [state.user]);
 
-  const contentAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: contentOpacity.value,
-  }));
-
-  const headerAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: headerScale.value }],
-  }));
 
   const handleEditProfile = () => {
-    console.log('Navigate to edit profile');
+    (navigation as any).navigate('EditProfile');
+  };
+
+  const handleResumeBuilder = () => {
+    (navigation as any).navigate('ResumeBuilder');
+  };
+
+  const handleProfilePictureUpload = () => {
+    Alert.alert(
+      'Upload Profile Picture',
+      'Choose an option',
+      [
+        {
+          text: 'Camera',
+          onPress: () => {
+            // Simulate camera capture
+            const mockImageUri = 'https://via.placeholder.com/300x300/1976D2/FFFFFF?text=Profile';
+            setProfilePicture(mockImageUri);
+            setProfilePictureUploaded(true);
+            
+            // Update user profile
+            if (state.user) {
+              updateProfile({
+                ...state.user,
+                profilePicture: {
+                  uri: mockImageUri,
+                  uploaded: true
+                }
+              });
+            }
+          }
+        },
+        {
+          text: 'Gallery',
+          onPress: () => {
+            // Simulate gallery selection
+            const mockImageUri = 'https://via.placeholder.com/300x300/4CAF50/FFFFFF?text=Profile';
+            setProfilePicture(mockImageUri);
+            setProfilePictureUploaded(true);
+            
+            // Update user profile
+            if (state.user) {
+              updateProfile({
+                ...state.user,
+                profilePicture: {
+                  uri: mockImageUri,
+                  uploaded: true
+                }
+              });
+            }
+          }
+        },
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        }
+      ]
+    );
+  };
+
+  const handleAccountSettings = () => {
+    // Navigate to account settings
+    console.log('Navigate to account settings');
+  };
+
+  const handlePrivacySettings = () => {
+    // Navigate to privacy settings
+    console.log('Navigate to privacy settings');
   };
 
   const handleResumeUpload = () => {
@@ -68,14 +122,6 @@ const ProfileScreen: React.FC = () => {
 
   const handleAddSkill = () => {
     console.log('Add new skill');
-  };
-
-  const handleAccountSettings = () => {
-    console.log('Navigate to account settings');
-  };
-
-  const handlePrivacySettings = () => {
-    console.log('Navigate to privacy settings');
   };
 
   const handleLogout = () => {
@@ -115,18 +161,39 @@ const ProfileScreen: React.FC = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Animated.View style={[styles.content, contentAnimatedStyle]}>
+        <View style={styles.content}>
           {/* Header with Avatar */}
-          <Animated.View style={[styles.header, headerAnimatedStyle]}>
+          <View style={styles.header}>
             <View style={styles.avatarContainer}>
-              <Avatar.Icon 
-                size={120} 
-                icon="account-circle-outline"
-                style={styles.avatar}
-              />
-              <TouchableOpacity style={styles.editButton} onPress={handleEditProfile}>
-                <MaterialCommunityIcons name="account-edit-outline" size={20} color="white" />
-              </TouchableOpacity>
+              {profilePictureUploaded && profilePicture ? (
+                <View style={styles.profileImageContainer}>
+                  <Image 
+                    source={{ uri: profilePicture }} 
+                    style={styles.profileImage}
+                    resizeMode="cover"
+                  />
+                  <TouchableOpacity 
+                    style={styles.editButton}
+                    onPress={handleProfilePictureUpload}
+                  >
+                    <MaterialCommunityIcons name="camera-outline" size={20} color="#FFFFFF" />
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View style={styles.avatarPlaceholder}>
+                  <Avatar.Icon 
+                    size={120} 
+                    icon="account-circle-outline"
+                    style={styles.avatar}
+                  />
+                  <TouchableOpacity 
+                    style={styles.editButton}
+                    onPress={handleProfilePictureUpload}
+                  >
+                    <MaterialCommunityIcons name="camera-outline" size={20} color="#FFFFFF" />
+                  </TouchableOpacity>
+                </View>
+              )}
             </View>
             <Text variant="headlineMedium" style={styles.userName}>
               {state.user?.name || 'User Name'}
@@ -134,7 +201,18 @@ const ProfileScreen: React.FC = () => {
             <Text variant="bodyLarge" style={styles.userTitle}>
               {state.user?.preferences?.role || 'Job Title'}
             </Text>
-          </Animated.View>
+            
+            {/* Edit Profile Button */}
+            <Button
+              mode="outlined"
+              onPress={handleEditProfile}
+              style={styles.editProfileButton}
+              textColor="#1976D2"
+              icon={() => <MaterialCommunityIcons name="account-edit-outline" size={20} color="#1976D2" />}
+            >
+              Edit Profile
+            </Button>
+          </View>
 
           {/* Profile Info Card */}
           <Card style={styles.profileInfoCard}>
@@ -240,7 +318,7 @@ const ProfileScreen: React.FC = () => {
               ) : (
                 <Button
                   mode="outlined"
-                  onPress={handleResumeUpload}
+                  onPress={handleResumeBuilder}
                   style={styles.uploadButton}
                   textColor="#1976D2"
                   icon={() => <MaterialCommunityIcons name="file-upload-outline" size={20} color="#1976D2" />}
@@ -373,8 +451,17 @@ const ProfileScreen: React.FC = () => {
               </TouchableOpacity>
             </Card.Content>
           </Card>
-        </Animated.View>
+        </View>
       </ScrollView>
+      
+      {/* Floating Edit Button */}
+      <TouchableOpacity 
+        style={styles.floatingEditButton}
+        onPress={handleEditProfile}
+        activeOpacity={0.8}
+      >
+        <MaterialCommunityIcons name="pencil" size={24} color="#FFFFFF" />
+      </TouchableOpacity>
     </SafeAreaView>
   );
 };
@@ -401,6 +488,22 @@ const styles = StyleSheet.create({
   avatarContainer: {
     position: 'relative',
     marginBottom: 16,
+  },
+  profileImageContainer: {
+    position: 'relative',
+  },
+  profileImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+  },
+  avatarPlaceholder: {
+    position: 'relative',
   },
   avatar: {
     backgroundColor: '#1976D2',
@@ -435,6 +538,12 @@ const styles = StyleSheet.create({
   userTitle: {
     color: '#666666',
     textAlign: 'center',
+  },
+  editProfileButton: {
+    marginTop: 16,
+    borderRadius: 8,
+    borderColor: '#1976D2',
+    borderWidth: 1.5,
   },
   profileInfoCard: {
     backgroundColor: '#FFFFFF',
@@ -685,6 +794,22 @@ const styles = StyleSheet.create({
     color: '#666666',
     marginTop: 16,
     textAlign: 'center',
+  },
+  floatingEditButton: {
+    position: 'absolute',
+    bottom: 34, // Extra padding for mobile navigation
+    right: 20,
+    backgroundColor: '#1976D2',
+    borderRadius: 28,
+    width: 56,
+    height: 56,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
 });
 

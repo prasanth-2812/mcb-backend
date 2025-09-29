@@ -67,50 +67,26 @@ const SignupScreen: React.FC = () => {
     // Simulate API call
     setTimeout(() => {
       login({
-        id: '1',
-        personalInfo: {
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          phone: formData.phone,
-          location: 'New York, NY',
-          profileImage: '',
-          bio: 'Software Developer',
-        },
-        professionalInfo: {
-          title: 'Software Developer',
-          experience: '5 years',
-          skills: ['React', 'Node.js', 'TypeScript'],
-          availability: 'Full-time',
-          expectedSalary: '$80,000 - $100,000',
-          workType: ['Remote'],
-          languages: [{ language: 'English', proficiency: 'Native' }],
-        },
-        education: [],
-        experience: [],
-        projects: [],
-        certifications: [],
+        id: 1,
+        name: `${formData.firstName} ${formData.lastName}`,
+        email: formData.email,
+        phone: formData.phone,
+        location: 'New York, NY',
+        skills: ['React', 'Node.js', 'TypeScript'],
         resume: {
           fileName: '',
-          fileSize: '',
-          uploadDate: '',
-          url: '',
+          uploaded: false,
         },
-        preferences: {
-          jobTypes: ['Full-time'],
-          workArrangement: ['Remote'],
-          industries: ['Technology'],
-          companySize: ['Medium'],
-          notificationSettings: {
-            emailNotifications: true,
-            pushNotifications: true,
-            jobMatches: true,
-            applicationUpdates: true,
-            weeklyDigest: true,
-          },
+        profilePicture: {
+          uri: '',
+          uploaded: false,
         },
         profileCompletion: 75,
-        lastUpdated: new Date().toISOString(),
+        preferences: {
+          role: 'Software Developer',
+          location: 'New York, NY',
+          type: 'Full-time',
+        },
       });
       setIsLoading(false);
     }, 1500);
@@ -128,7 +104,7 @@ const SignupScreen: React.FC = () => {
         {/* Header */}
         <View style={styles.header}>
           <Image 
-            source={require('../../assets/logoJob.png')} 
+            source={require('../../assets/logo.png')} 
             style={styles.logo}
             resizeMode="contain"
           />

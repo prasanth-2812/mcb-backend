@@ -29,7 +29,7 @@ const ApplicationsScreen: React.FC = () => {
   useEffect(() => {
     // Load applications if not already loaded
     if (state.applications.length === 0) {
-      dispatch({ type: 'SET_APPLICATIONS', payload: applicationsData });
+      dispatch({ type: 'SET_APPLICATIONS', payload: applicationsData as Application[] });
     }
 
     // Animate content entrance

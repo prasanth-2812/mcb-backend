@@ -3,13 +3,6 @@ import { View, StyleSheet, ScrollView, StatusBar, Image, TouchableOpacity } from
 import { Text, Button, Card, Chip, Divider, useTheme, IconButton } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
-  withSpring,
-  withTiming,
-  withSequence 
-} from 'react-native-reanimated';
 import { useApp } from '../context/AppContext';
 import { Colors } from '../constants/colors';
 import { Sizes } from '../constants/sizes';
@@ -30,44 +23,23 @@ const JobDetailsScreen: React.FC<JobDetailsScreenProps> = ({ route, navigation }
   const isDark = state.theme === 'dark';
   
   const [job, setJob] = useState<Job | null>(null);
-  const [isApplying, setIsApplying] = useState(false);
   
-  const contentOpacity = useSharedValue(0);
-  const buttonScale = useSharedValue(1);
-
   useEffect(() => {
     // Find the job by ID
     const foundJob = state.jobs.find(j => j.id === route.params.jobId);
     if (foundJob) {
       setJob(foundJob);
     }
-
-    // Animate content entrance
-    contentOpacity.value = withTiming(1, { duration: 600 });
   }, [route.params.jobId, state.jobs]);
-
-  const contentAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: contentOpacity.value,
-  }));
-
-  const buttonAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: buttonScale.value }],
-  }));
 
   const handleApply = async () => {
     if (!job) return;
 
-    setIsApplying(true);
-    buttonScale.value = withSequence(
-      withTiming(0.95, { duration: 100 }),
-      withSpring(1, { damping: 15, stiffness: 300 })
-    );
-
-    // Simulate API call
-    setTimeout(() => {
-      applyToJob(job.id);
-      setIsApplying(false);
-    }, 1500);
+    // Navigate to Job Application screen
+    (navigation as any).navigate('JobApplication', { 
+      jobId: job.id,
+      job: job 
+    });
   };
 
   const handleSave = () => {
@@ -110,39 +82,13 @@ const JobDetailsScreen: React.FC<JobDetailsScreenProps> = ({ route, navigation }
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#F9F9F9" />
       
-      {/* Header Bar */}
-      <View style={styles.headerBar}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-          activeOpacity={0.7}
-        >
-          <MaterialCommunityIcons name="arrow-left" size={24} color="#1976D2" />
-        </TouchableOpacity>
-        
-        <Text variant="headlineSmall" style={styles.headerTitle}>
-          Job Details
-        </Text>
-        
-        <TouchableOpacity 
-          style={styles.bookmarkButton}
-          onPress={handleSave}
-          activeOpacity={0.7}
-        >
-          <MaterialCommunityIcons 
-            name={isSaved ? "bookmark" : "bookmark-outline"} 
-            size={24} 
-            color={isSaved ? "#1976D2" : "#666666"} 
-          />
-        </TouchableOpacity>
-      </View>
       
       <ScrollView 
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Animated.View style={[styles.content, contentAnimatedStyle]}>
+        <View style={styles.content}>
           {/* Job Overview Card */}
           <Card style={styles.jobOverviewCard}>
             <Card.Content style={styles.jobOverviewContent}>
@@ -153,11 +99,14 @@ const JobDetailsScreen: React.FC<JobDetailsScreenProps> = ({ route, navigation }
                       source={{ uri: job.companyLogo }} 
                       style={styles.companyLogo}
                       accessibilityLabel={`${job.company} logo`}
+                      onError={() => {
+                        console.log('Failed to load company logo:', job.companyLogo);
+                      }}
                     />
                   ) : (
                     <View style={styles.companyLogoPlaceholder}>
                       <Text style={styles.companyLogoText}>
-                        {job.company.charAt(0).toUpperCase()}
+                        {job.company?.charAt(0)?.toUpperCase() || '?'}
                       </Text>
                     </View>
                   )}
@@ -325,11 +274,11 @@ const JobDetailsScreen: React.FC<JobDetailsScreenProps> = ({ route, navigation }
               </View>
             </Card.Content>
           </Card>
-        </Animated.View>
+        </View>
       </ScrollView>
 
       {/* Bottom Fixed Action Bar */}
-      <Animated.View style={[styles.bottomActionBar, buttonAnimatedStyle]}>
+      <View style={styles.bottomActionBar}>
         <Button
           mode="outlined"
           onPress={handleShare}
@@ -343,15 +292,14 @@ const JobDetailsScreen: React.FC<JobDetailsScreenProps> = ({ route, navigation }
         <Button
           mode="contained"
           onPress={handleApply}
-          loading={isApplying}
-          disabled={isApplied || isApplying}
+          disabled={isApplied}
           style={styles.applyButton}
           buttonColor="#1976D2"
           icon={() => <MaterialCommunityIcons name="send-outline" size={22} color="#FFFFFF" />}
         >
-          {isApplied ? 'Applied' : (isApplying ? 'Applying...' : 'Apply Now')}
+          {isApplied ? 'Applied' : 'Apply Now'}
         </Button>
-      </Animated.View>
+      </View>
     </SafeAreaView>
   );
 };
@@ -614,6 +562,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
+    paddingBottom: 34, // Extra padding for mobile navigation
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
     borderTopColor: '#E0E0E0',

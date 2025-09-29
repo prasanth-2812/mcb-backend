@@ -10,14 +10,17 @@ import SplashScreen from '../screens/SplashScreen';
 import OnboardingScreen from '../screens/OnboardingScreen';
 import LoginScreen from '../screens/LoginScreen';
 import SignupScreen from '../screens/SignupScreen';
+import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
 import HomeScreen from '../screens/HomeScreen';
 import JobsScreen from '../screens/JobsScreen';
 import JobDetailsScreen from '../screens/JobDetailsScreen';
 import JobDetailsPage from '../screens/JobDetailsPage';
+import JobApplicationScreen from '../screens/JobApplicationScreen';
 import ApplicationPage from '../screens/ApplicationPage';
 import ApplicationsScreen from '../screens/ApplicationsScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import EditProfileScreen from '../screens/EditProfileScreen';
 import ResumeBuilderScreen from '../screens/ResumeBuilderScreen';
 import SavedJobsScreen from '../screens/SavedJobsScreen';
 
@@ -123,7 +126,7 @@ const AppNavigator = () => {
             <Stack.Screen 
               name="JobDetails" 
               component={JobDetailsScreen as any}
-              options={{ 
+              options={({ route }) => ({ 
                 title: 'Job Details',
                 headerShown: true,
                 headerStyle: {
@@ -134,6 +137,22 @@ const AppNavigator = () => {
                   fontWeight: '600',
                   fontSize: 18,
                 },
+              })}
+            />
+            <Stack.Screen 
+              name="JobApplication" 
+              component={JobApplicationScreen as any}
+              options={{ 
+                title: 'Apply for Job',
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen 
+              name="EditProfile" 
+              component={EditProfileScreen}
+              options={{ 
+                title: 'Edit Profile',
+                headerShown: false,
               }}
             />
             <Stack.Screen 
@@ -196,6 +215,8 @@ const AuthNavigator = () => {
       return <LoginScreen />;
     case 'signup':
       return <SignupScreen />;
+    case 'forgot-password':
+      return <ForgotPasswordScreen />;
     default:
       return <OnboardingScreen />;
   }

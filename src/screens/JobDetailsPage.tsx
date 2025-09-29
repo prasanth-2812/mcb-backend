@@ -535,6 +535,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     padding: 20,
+    paddingBottom: 34, // Extra padding for mobile navigation
     borderTopWidth: 1,
     borderTopColor: '#E5E7EB',
     elevation: 8,

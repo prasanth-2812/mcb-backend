@@ -38,6 +38,10 @@ const LoginScreen: React.FC = () => {
           fileName: '',
           uploaded: false,
         },
+        profilePicture: {
+          uri: '',
+          uploaded: false,
+        },
         profileCompletion: 75,
         preferences: {
           role: 'Software Developer',
@@ -61,7 +65,7 @@ const LoginScreen: React.FC = () => {
         {/* Header */}
         <View style={styles.header}>
           <Image 
-            source={require('../../assets/logoJob.png')} 
+            source={require('../../assets/logo.png')} 
             style={styles.logo}
             resizeMode="contain"
           />
@@ -130,7 +134,10 @@ const LoginScreen: React.FC = () => {
             </View>
           </View>
 
-          <TouchableOpacity style={styles.forgotPassword}>
+          <TouchableOpacity 
+            style={styles.forgotPassword}
+            onPress={() => navigateToScreen('forgot-password')}
+          >
             <Text style={[styles.forgotPasswordText, { color: '#3B82F6' }]}>
               Forgot Password?
             </Text>
