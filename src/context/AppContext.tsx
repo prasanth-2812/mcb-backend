@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppState, AppContextType, AppAction, UserProfile, Job, Application, Notification } from '../types';
-import { loadInitialData } from '../utils/dataLoader';
+import { loadInitialData, loadDataFromAPI } from '../utils/dataLoader';
 
 // Initial state
 const initialState: AppState = {
@@ -124,9 +124,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const loadAppData = async () => {
     try {
-      const [user, jobs, applications, notifications, savedJobs, appliedJobs, theme] = await Promise.all([
+      const [user, applications, notifications, savedJobs, appliedJobs, theme] = await Promise.all([
         AsyncStorage.getItem('user'),
-        AsyncStorage.getItem('jobs'),
         AsyncStorage.getItem('applications'),
         AsyncStorage.getItem('notifications'),
         AsyncStorage.getItem('savedJobs'),
@@ -134,21 +133,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         AsyncStorage.getItem('theme'),
       ]);
 
-      // Load initial data if no user data exists in AsyncStorage
+      // Always load jobs from API, never from AsyncStorage
+      try {
+        console.log('🔄 Loading fresh jobs from API...');
+        const apiData = await loadDataFromAPI();
+        dispatch({ type: 'SET_JOBS', payload: apiData.jobs });
+        console.log(`✅ Loaded ${apiData.jobs.length} jobs from API`);
+      } catch (apiError) {
+        console.error('❌ API loading failed:', apiError);
+        dispatch({ type: 'SET_JOBS', payload: [] });
+      }
+
+      // Load user data if exists, otherwise use API data
       if (!user) {
-        const initialData = loadInitialData();
-        dispatch({ type: 'SET_USER', payload: initialData.user });
-        dispatch({ type: 'SET_JOBS', payload: initialData.jobs });
-        dispatch({ type: 'SET_APPLICATIONS', payload: initialData.applications });
-        dispatch({ type: 'SET_NOTIFICATIONS', payload: initialData.notifications });
-        // Note: savedJobs and appliedJobs are arrays of strings, not jobs
-        // They should be handled separately if needed
+        try {
+          const apiData = await loadDataFromAPI();
+          dispatch({ type: 'SET_USER', payload: apiData.user });
+          dispatch({ type: 'SET_APPLICATIONS', payload: apiData.applications });
+          dispatch({ type: 'SET_NOTIFICATIONS', payload: apiData.notifications });
+        } catch (apiError) {
+          console.error('API loading failed, no fallback data:', apiError);
+          dispatch({ type: 'SET_USER', payload: null });
+          dispatch({ type: 'SET_APPLICATIONS', payload: [] });
+          dispatch({ type: 'SET_NOTIFICATIONS', payload: [] });
+        }
       } else {
         if (user) {
           dispatch({ type: 'SET_USER', payload: JSON.parse(user) });
-        }
-        if (jobs) {
-          dispatch({ type: 'SET_JOBS', payload: JSON.parse(jobs) });
         }
         if (applications) {
           dispatch({ type: 'SET_APPLICATIONS', payload: JSON.parse(applications) });
@@ -171,9 +182,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     } catch (error) {
       console.error('Error loading app data:', error);
-      // Fallback to initial data if there's an error
-      const initialData = loadInitialData();
-      dispatch({ type: 'SET_USER', payload: initialData.user });
+      dispatch({ type: 'SET_USER', payload: null });
+      dispatch({ type: 'SET_JOBS', payload: [] });
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
@@ -183,7 +193,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       await Promise.all([
         AsyncStorage.setItem('user', JSON.stringify(state.user)),
-        AsyncStorage.setItem('jobs', JSON.stringify(state.jobs)),
+        // Don't save jobs to AsyncStorage - always load fresh from API
         AsyncStorage.setItem('applications', JSON.stringify(state.applications)),
         AsyncStorage.setItem('notifications', JSON.stringify(state.notifications)),
         AsyncStorage.setItem('savedJobs', JSON.stringify(state.savedJobs)),

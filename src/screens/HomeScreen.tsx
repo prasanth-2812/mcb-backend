@@ -11,7 +11,6 @@ import ProfileCard from '../components/ProfileCard';
 import JobCard from '../components/JobCard';
 import SearchBar from '../components/SearchBar';
 import JobCardSkeleton from '../components/JobCardSkeleton';
-import jobsData from '../data/jobs.json';
 import notificationsData from '../data/notifications.json';
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -31,7 +30,8 @@ const HomeScreen: React.FC = () => {
   useEffect(() => {
     // Load initial data
     if (state.jobs.length === 0) {
-      dispatch({ type: 'SET_JOBS', payload: jobsData });
+      // Try to load from API first
+      loadJobsFromAPI();
     }
     if (state.notifications.length === 0) {
       const transformedNotifications = notificationsData.map(notification => ({
@@ -51,8 +51,22 @@ const HomeScreen: React.FC = () => {
     loadData();
   }, []);
 
+  const loadJobsFromAPI = async () => {
+    try {
+      const { loadDataFromAPI } = await import('../utils/dataLoader');
+      const apiData = await loadDataFromAPI();
+      dispatch({ type: 'SET_JOBS', payload: apiData.jobs });
+    } catch (error) {
+      console.error('Failed to load jobs from API:', error);
+      // No fallback - only use API data
+      dispatch({ type: 'SET_JOBS', payload: [] });
+    }
+  };
+
   const onRefresh = async () => {
     setRefreshing(true);
+    // Refresh jobs from API
+    await loadJobsFromAPI();
     setTimeout(() => {
       setRefreshing(false);
     }, 1000);
@@ -218,19 +232,20 @@ const HomeScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <SearchBar
-            placeholder="Search for jobs, companies, or skills..."
-            onSearch={handleSearch}
-            onFilterPress={() => navigation.navigate('Jobs' as never)}
-            showVoiceSearch={false}
-            showSuggestions={false}
-            activeFilters={[]}
-            onRemoveFilter={() => {}}
-            onClearFilters={() => {}}
-          />
-        </View>
+         {/* Search Bar */}
+         <View style={styles.searchContainer}>
+           <SearchBar
+             placeholder="Search for jobs, companies, or skills..."
+             onSearch={handleSearch}
+             onFilterPress={() => navigation.navigate('Jobs' as never)}
+             showFilterButton={true}
+             showVoiceSearch={false}
+             showSuggestions={false}
+             activeFilters={[]}
+             onRemoveFilter={() => {}}
+             onClearFilters={() => {}}
+           />
+         </View>
 
         {/* Filter Chips */}
         <View style={styles.filterContainer}>
@@ -887,3 +902,5 @@ const styles = StyleSheet.create({
 });
 
 export default HomeScreen;
+
+

@@ -1,0 +1,60 @@
+[
+  {
+    "id": "1",
+    "email": "john.doe@example.com",
+    "name": "John Doe",
+    "phone": "+91 98765 43210",
+    "resume": null,
+    "appliedJobs": ["1", "3"],
+    "profilePicture": "https://via.placeholder.com/100x100/2563eb/ffffff?text=JD",
+    "createdAt": "2024-01-01",
+    "role": "employee",
+    "skills": ["React", "JavaScript", "Node.js", "MongoDB"],
+    "experience": "3 years",
+    "education": "B.Tech Computer Science"
+  },
+  {
+    "id": "2",
+    "email": "jane.smith@example.com",
+    "name": "Jane Smith",
+    "phone": "+91 98765 43211",
+    "resume": "resume_jane_smith.pdf",
+    "appliedJobs": ["2", "4", "5"],
+    "profilePicture": "https://via.placeholder.com/100x100/2563eb/ffffff?text=JS",
+    "createdAt": "2024-01-02",
+    "role": "employee",
+    "skills": ["Python", "Django", "PostgreSQL", "AWS"],
+    "experience": "5 years",
+    "education": "M.Tech Software Engineering"
+  },
+  {
+    "id": "3",
+    "email": "hr@techcorp.com",
+    "name": "Sarah Johnson",
+    "phone": "+91 98765 43212",
+    "resume": null,
+    "appliedJobs": [],
+    "profilePicture": "https://via.placeholder.com/100x100/16a34a/ffffff?text=SJ",
+    "createdAt": "2024-01-03",
+    "role": "employer",
+    "companyName": "TechCorp Solutions",
+    "companyLogo": "https://via.placeholder.com/150x50/2563eb/ffffff?text=TechCorp",
+    "companyDescription": "Leading technology solutions provider specializing in web development and cloud services.",
+    "postedJobs": ["1", "2", "3"]
+  },
+  {
+    "id": "4",
+    "email": "recruiter@innovate.com",
+    "name": "Mike Wilson",
+    "phone": "+91 98765 43213",
+    "resume": null,
+    "appliedJobs": [],
+    "profilePicture": "https://via.placeholder.com/100x100/16a34a/ffffff?text=MW",
+    "createdAt": "2024-01-04",
+    "role": "employer",
+    "companyName": "InnovateTech",
+    "companyLogo": "https://via.placeholder.com/150x50/3b82f6/ffffff?text=InnovateTech",
+    "companyDescription": "Innovative startup focused on AI and machine learning solutions for modern businesses.",
+    "postedJobs": ["4", "5"]
+  }
+]

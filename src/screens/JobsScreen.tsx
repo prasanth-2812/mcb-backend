@@ -10,7 +10,7 @@ import JobCard from '../components/JobCard';
 import SearchBar from '../components/SearchBar';
 import FilterJobsModal from '../components/FilterJobsModal';
 import { Job, FilterOptions } from '../types';
-import jobsData from '../data/jobs.json';
+// Removed static jobs data - using API only
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -40,9 +40,22 @@ const JobsScreen: React.FC<JobsScreenProps> = ({ navigation }) => {
   useEffect(() => {
     // Load jobs if not already loaded
     if (state.jobs.length === 0) {
-      dispatch({ type: 'SET_JOBS', payload: jobsData });
+      // Try to load from API first
+      loadJobsFromAPI();
     }
   }, []);
+
+  const loadJobsFromAPI = async () => {
+    try {
+      const { loadDataFromAPI } = await import('../utils/dataLoader');
+      const apiData = await loadDataFromAPI();
+      dispatch({ type: 'SET_JOBS', payload: apiData.jobs });
+    } catch (error) {
+      console.error('Failed to load jobs from API:', error);
+      // No fallback - only use API data
+      dispatch({ type: 'SET_JOBS', payload: [] });
+    }
+  };
 
   useEffect(() => {
     // Filter jobs based on search query and filters

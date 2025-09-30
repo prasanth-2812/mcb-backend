@@ -1,0 +1,40 @@
+import { DataTypes, Model, Optional } from 'sequelize';
+import { sequelize } from './index';
+
+export interface JobAttributes {
+  id: string;
+  title: string;
+  company: string;
+  location?: string | null;
+  type?: string | null;
+  category?: string | null;
+  isRemote?: boolean | null;
+  description?: string | null;
+}
+
+export type JobCreation = Optional<JobAttributes, 'id'>;
+
+export class Job extends Model<JobAttributes, JobCreation> implements JobAttributes {
+  public id!: string;
+  public title!: string;
+  public company!: string;
+  public location!: string | null;
+  public type!: string | null;
+  public category!: string | null;
+  public isRemote!: boolean | null;
+  public description!: string | null;
+}
+
+Job.init({
+  id: { type: DataTypes.STRING, primaryKey: true },
+  title: { type: DataTypes.STRING, allowNull: false },
+  company: { type: DataTypes.STRING, allowNull: false },
+  location: { type: DataTypes.STRING },
+  type: { type: DataTypes.STRING },
+  category: { type: DataTypes.STRING },
+  isRemote: { type: DataTypes.BOOLEAN },
+  description: { type: DataTypes.TEXT },
+}, {
+  sequelize,
+  tableName: 'jobs',
+});
