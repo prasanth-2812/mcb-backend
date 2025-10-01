@@ -3,7 +3,6 @@ import { View, StyleSheet, Dimensions, Image } from 'react-native';
 import { Text, Button, useTheme } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
@@ -16,6 +15,8 @@ import PagerView from 'react-native-pager-view';
 import { useApp } from '../context/AppContext';
 import { Colors } from '../constants/colors';
 import { Sizes } from '../constants/sizes';
+import OnboardingIllustration from '../components/OnboardingIllustration';
+import OnboardingIllustrationFallback from '../components/OnboardingIllustrationFallback';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -24,7 +25,7 @@ interface OnboardingSlide {
   title: string;
   description: string;
   quote: string;
-  icon: string;
+  illustration: 'job-search' | 'track-applications' | 'build-profile' | 'notifications';
   color: string;
 }
 
@@ -34,7 +35,7 @@ const onboardingSlides: OnboardingSlide[] = [
     title: 'Find Your Dream Job',
     description: 'Discover thousands of job opportunities tailored to your skills and preferences.',
     quote: 'From small beginnings to big dreams, every job matters here.',
-    icon: 'briefcase-search-outline',
+    illustration: 'job-search',
     color: '#1976D2',
   },
   {
@@ -42,7 +43,7 @@ const onboardingSlides: OnboardingSlide[] = [
     title: 'Track Applications',
     description: 'Keep track of all your job applications and their status in one place.',
     quote: 'Stay organized, whether it\'s a government post or your first step in a career.',
-    icon: 'file-document-outline',
+    illustration: 'track-applications',
     color: '#1976D2',
   },
   {
@@ -50,7 +51,7 @@ const onboardingSlides: OnboardingSlide[] = [
     title: 'Build Your Profile',
     description: 'Create a compelling profile that showcases your skills and experience.',
     quote: 'Showcase your skills, no matter how big or small – opportunities await you.',
-    icon: 'account-circle-outline',
+    illustration: 'build-profile',
     color: '#1976D2',
   },
   {
@@ -58,7 +59,7 @@ const onboardingSlides: OnboardingSlide[] = [
     title: 'Get Notified',
     description: 'Stay updated with job matches, application updates, and career opportunities.',
     quote: 'Never miss an update, because the right job can change everything.',
-    icon: 'bell-outline',
+    illustration: 'notifications',
     color: '#1976D2',
   },
 ];
@@ -124,7 +125,7 @@ const OnboardingScreen: React.FC = () => {
       };
     });
 
-    const iconAnimatedStyle = useAnimatedStyle(() => {
+    const illustrationAnimatedStyle = useAnimatedStyle(() => {
       return {
         transform: [{ scale: iconScale.value }],
       };
@@ -133,11 +134,11 @@ const OnboardingScreen: React.FC = () => {
     return (
       <Animated.View key={slide.id} style={[styles.slide, animatedStyle]}>
         <View style={styles.slideContent}>
-          <Animated.View style={[styles.iconContainer, iconAnimatedStyle]}>
-            <MaterialCommunityIcons 
-              name={slide.icon} 
-              size={48} 
-              color="#FFFFFF" 
+          <Animated.View style={[styles.illustrationContainer, illustrationAnimatedStyle]}>
+            <OnboardingIllustrationFallback 
+              type={slide.illustration}
+              size={200}
+              color={slide.color}
             />
           </Animated.View>
           
@@ -287,8 +288,8 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   logo: {
-    width: 120,
-    height: 40,
+    width: 160,
+    height: 60,
   },
   skipButton: {
     marginLeft: 16,
@@ -306,10 +307,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     maxWidth: 320,
   },
-  iconContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+  illustrationContainer: {
+    width: 220,
+    height: 220,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 32,
@@ -319,10 +319,8 @@ const styles = StyleSheet.create({
       width: 0,
       height: 6,
     },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.2,
     shadowRadius: 12,
-    // Gradient background
-    backgroundColor: '#1976D2',
   },
   title: {
     fontWeight: 'bold',

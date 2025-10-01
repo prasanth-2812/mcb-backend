@@ -15,7 +15,6 @@ import { Colors } from '../constants/colors';
 import { Sizes } from '../constants/sizes';
 import JobCard from '../components/JobCard';
 import { Job } from '../types';
-import jobsData from '../data/jobs.json';
 
 const SavedJobsScreen: React.FC = () => {
   const theme = useTheme();
@@ -30,11 +29,6 @@ const SavedJobsScreen: React.FC = () => {
   const contentOpacity = useSharedValue(0);
 
   useEffect(() => {
-    // Load jobs if not already loaded
-    if (state.jobs.length === 0) {
-      dispatch({ type: 'SET_JOBS', payload: jobsData });
-    }
-
     // Animate content entrance
     contentOpacity.value = withTiming(1, { duration: 600 });
   }, []);

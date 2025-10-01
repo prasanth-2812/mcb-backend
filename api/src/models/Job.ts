@@ -15,14 +15,14 @@ export interface JobAttributes {
 export type JobCreation = Optional<JobAttributes, 'id'>;
 
 export class Job extends Model<JobAttributes, JobCreation> implements JobAttributes {
-  public id!: string;
-  public title!: string;
-  public company!: string;
-  public location!: string | null;
-  public type!: string | null;
-  public category!: string | null;
-  public isRemote!: boolean | null;
-  public description!: string | null;
+  declare id: string;
+  declare title: string;
+  declare company: string;
+  declare location: string | null;
+  declare type: string | null;
+  declare category: string | null;
+  declare isRemote: boolean | null;
+  declare description: string | null;
 }
 
 Job.init({

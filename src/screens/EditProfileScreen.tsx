@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, StatusBar, TouchableOpacity, Alert, Image } from 'react-native';
-import { Text, Button, Card, useTheme, TextInput, Chip, IconButton, Avatar } from 'react-native-paper';
+import { Text, Button, Card, useTheme, Chip, IconButton, Avatar } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useApp } from '../context/AppContext';
 import { Colors, DarkColors } from '../constants/colors';
 import { Sizes } from '../constants/sizes';
+import ValidatedInput from '../components/ValidatedInput';
+import { validateForm, VALIDATION_RULES, ERROR_MESSAGES } from '../utils/validation';
 
 const EditProfileScreen: React.FC = () => {
   const theme = useTheme();
@@ -28,12 +30,38 @@ const EditProfileScreen: React.FC = () => {
   const [newSkill, setNewSkill] = useState('');
   const [profilePicture, setProfilePicture] = useState(state.user?.profilePicture?.uri || '');
   const [profilePictureUploaded, setProfilePictureUploaded] = useState(state.user?.profilePicture?.uploaded || false);
+  const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [fieldValidations, setFieldValidations] = useState<{[key: string]: boolean}>({});
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
+    
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  const handleFieldValidation = (field: string, isValid: boolean) => {
+    setFieldValidations(prev => ({ ...prev, [field]: isValid }));
+  };
+
+  const validateFormData = () => {
+    const validationErrors = validateForm(formData, {
+      name: VALIDATION_RULES.fullName,
+      email: VALIDATION_RULES.email,
+      phone: VALIDATION_RULES.phone,
+      location: VALIDATION_RULES.location,
+      role: VALIDATION_RULES.role,
+      jobType: VALIDATION_RULES.jobType,
+      preferredLocation: VALIDATION_RULES.preferredLocation,
+    });
+    
+    setErrors(validationErrors);
+    return Object.keys(validationErrors).length === 0;
   };
 
   const handleProfilePictureUpload = () => {
@@ -68,10 +96,27 @@ const EditProfileScreen: React.FC = () => {
   };
 
   const handleAddSkill = () => {
-    if (newSkill.trim() && !skills.includes(newSkill.trim())) {
-      setSkills(prev => [...prev, newSkill.trim()]);
-      setNewSkill('');
+    const trimmedSkill = newSkill.trim();
+    if (!trimmedSkill) return;
+    
+    if (skills.includes(trimmedSkill)) {
+      setErrors(prev => ({ ...prev, skill: ERROR_MESSAGES.skills.duplicate }));
+      return;
     }
+    
+    if (skills.length >= 20) {
+      setErrors(prev => ({ ...prev, skill: ERROR_MESSAGES.skills.tooMany }));
+      return;
+    }
+    
+    if (!/^[a-zA-Z0-9\s\-_&+]+$/.test(trimmedSkill)) {
+      setErrors(prev => ({ ...prev, skill: ERROR_MESSAGES.skills.invalid }));
+      return;
+    }
+    
+    setSkills(prev => [...prev, trimmedSkill]);
+    setNewSkill('');
+    setErrors(prev => ({ ...prev, skill: '' }));
   };
 
   const handleRemoveSkill = (skillToRemove: string) => {
@@ -79,6 +124,11 @@ const EditProfileScreen: React.FC = () => {
   };
 
   const handleSave = () => {
+    if (!validateFormData()) {
+      Alert.alert('Validation Error', 'Please fix the errors below and try again.');
+      return;
+    }
+
     // Update profile with new data
     const updatedProfile = {
       ...state.user,
@@ -209,50 +259,62 @@ const EditProfileScreen: React.FC = () => {
             </Text>
             
             <View style={styles.inputGroup}>
-              <TextInput
+              <ValidatedInput
                 label="Full Name"
                 value={formData.name}
                 onChangeText={(text) => handleInputChange('name', text)}
-                mode="outlined"
-                style={styles.input}
+                onValidationChange={(isValid) => handleFieldValidation('name', isValid)}
+                fieldName="name"
+                formData={formData}
                 textColor={isDark ? Colors.white : Colors.textPrimary}
                 outlineColor={isDark ? Colors.gray : Colors.border}
                 activeOutlineColor="#1976D2"
+                error={!!errors.name}
+                style={styles.input}
               />
               
-              <TextInput
+              <ValidatedInput
                 label="Email"
                 value={formData.email}
                 onChangeText={(text) => handleInputChange('email', text)}
-                mode="outlined"
-                style={styles.input}
+                onValidationChange={(isValid) => handleFieldValidation('email', isValid)}
+                fieldName="email"
+                formData={formData}
                 textColor={isDark ? Colors.white : Colors.textPrimary}
                 outlineColor={isDark ? Colors.gray : Colors.border}
                 activeOutlineColor="#1976D2"
                 keyboardType="email-address"
+                error={!!errors.email}
+                style={styles.input}
               />
               
-              <TextInput
+              <ValidatedInput
                 label="Phone"
                 value={formData.phone}
                 onChangeText={(text) => handleInputChange('phone', text)}
-                mode="outlined"
-                style={styles.input}
+                onValidationChange={(isValid) => handleFieldValidation('phone', isValid)}
+                fieldName="phone"
+                formData={formData}
                 textColor={isDark ? Colors.white : Colors.textPrimary}
                 outlineColor={isDark ? Colors.gray : Colors.border}
                 activeOutlineColor="#1976D2"
                 keyboardType="phone-pad"
+                error={!!errors.phone}
+                style={styles.input}
               />
               
-              <TextInput
+              <ValidatedInput
                 label="Location"
                 value={formData.location}
                 onChangeText={(text) => handleInputChange('location', text)}
-                mode="outlined"
-                style={styles.input}
+                onValidationChange={(isValid) => handleFieldValidation('location', isValid)}
+                fieldName="location"
+                formData={formData}
                 textColor={isDark ? Colors.white : Colors.textPrimary}
                 outlineColor={isDark ? Colors.gray : Colors.border}
                 activeOutlineColor="#1976D2"
+                error={!!errors.location}
+                style={styles.input}
               />
             </View>
           </Card.Content>
@@ -266,38 +328,47 @@ const EditProfileScreen: React.FC = () => {
             </Text>
             
             <View style={styles.inputGroup}>
-              <TextInput
+              <ValidatedInput
                 label="Desired Role"
                 value={formData.role}
                 onChangeText={(text) => handleInputChange('role', text)}
-                mode="outlined"
-                style={styles.input}
+                onValidationChange={(isValid) => handleFieldValidation('role', isValid)}
+                fieldName="role"
+                formData={formData}
                 textColor={isDark ? Colors.white : Colors.textPrimary}
                 outlineColor={isDark ? Colors.gray : Colors.border}
                 activeOutlineColor="#1976D2"
+                error={!!errors.role}
+                style={styles.input}
               />
               
-              <TextInput
+              <ValidatedInput
                 label="Job Type"
                 value={formData.jobType}
                 onChangeText={(text) => handleInputChange('jobType', text)}
-                mode="outlined"
-                style={styles.input}
+                onValidationChange={(isValid) => handleFieldValidation('jobType', isValid)}
+                fieldName="jobType"
+                formData={formData}
                 textColor={isDark ? Colors.white : Colors.textPrimary}
                 outlineColor={isDark ? Colors.gray : Colors.border}
                 activeOutlineColor="#1976D2"
                 placeholder="e.g., Full-time, Part-time, Contract"
+                error={!!errors.jobType}
+                style={styles.input}
               />
               
-              <TextInput
+              <ValidatedInput
                 label="Preferred Location"
                 value={formData.preferredLocation}
                 onChangeText={(text) => handleInputChange('preferredLocation', text)}
-                mode="outlined"
-                style={styles.input}
+                onValidationChange={(isValid) => handleFieldValidation('preferredLocation', isValid)}
+                fieldName="preferredLocation"
+                formData={formData}
                 textColor={isDark ? Colors.white : Colors.textPrimary}
                 outlineColor={isDark ? Colors.gray : Colors.border}
                 activeOutlineColor="#1976D2"
+                error={!!errors.preferredLocation}
+                style={styles.input}
               />
             </View>
           </Card.Content>
@@ -325,15 +396,17 @@ const EditProfileScreen: React.FC = () => {
             </View>
             
             <View style={styles.addSkillContainer}>
-              <TextInput
+              <ValidatedInput
                 label="Add Skill"
                 value={newSkill}
                 onChangeText={setNewSkill}
-                mode="outlined"
-                style={[styles.input, styles.skillInput]}
+                fieldName="skill"
+                formData={{ skills }}
                 textColor={isDark ? Colors.white : Colors.textPrimary}
                 outlineColor={isDark ? Colors.gray : Colors.border}
                 activeOutlineColor="#1976D2"
+                error={!!errors.skill}
+                style={[styles.input, styles.skillInput]}
                 onSubmitEditing={handleAddSkill}
               />
               <Button
@@ -346,6 +419,11 @@ const EditProfileScreen: React.FC = () => {
                 Add
               </Button>
             </View>
+            {errors.skill && (
+              <Text style={styles.errorText}>
+                {errors.skill}
+              </Text>
+            )}
           </Card.Content>
         </Card>
 
@@ -485,6 +563,12 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: 'transparent',
+  },
+  errorText: {
+    color: '#F44336',
+    marginTop: 4,
+    marginLeft: 12,
+    fontSize: 12,
   },
   skillsContainer: {
     flexDirection: 'row',

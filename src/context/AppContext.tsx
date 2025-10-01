@@ -2,6 +2,7 @@ import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppState, AppContextType, AppAction, UserProfile, Job, Application, Notification } from '../types';
 import { loadInitialData, loadDataFromAPI } from '../utils/dataLoader';
+import { authService, AuthResponse } from '../services/authService';
 
 // Initial state
 const initialState: AppState = {
@@ -124,7 +125,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const loadAppData = async () => {
     try {
-      const [user, applications, notifications, savedJobs, appliedJobs, theme] = await Promise.all([
+      const [authToken, user, applications, notifications, savedJobs, appliedJobs, theme] = await Promise.all([
+        AsyncStorage.getItem('authToken'),
         AsyncStorage.getItem('user'),
         AsyncStorage.getItem('applications'),
         AsyncStorage.getItem('notifications'),
@@ -144,37 +146,57 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         dispatch({ type: 'SET_JOBS', payload: [] });
       }
 
-      // Load user data if exists, otherwise use API data
-      if (!user) {
+      // Check if user has valid authentication token
+      if (authToken) {
         try {
-          const apiData = await loadDataFromAPI();
-          dispatch({ type: 'SET_USER', payload: apiData.user });
-          dispatch({ type: 'SET_APPLICATIONS', payload: apiData.applications });
-          dispatch({ type: 'SET_NOTIFICATIONS', payload: apiData.notifications });
-        } catch (apiError) {
-          console.error('API loading failed, no fallback data:', apiError);
+          console.log('🔄 Validating auth token...', authToken.substring(0, 20) + '...');
+          const userProfile = await authService.getCurrentUser(authToken);
+          
+          // Convert API user to app user profile
+          const appUserProfile: UserProfile = {
+            id: userProfile.id,
+            name: userProfile.name,
+            email: userProfile.email,
+            phone: userProfile.phone || '',
+            location: '',
+            skills: [],
+            resume: { fileName: '', uploaded: false },
+            profilePicture: { uri: '', uploaded: false },
+            profileCompletion: 50,
+            preferences: {
+              role: userProfile.role === 'employer' ? 'Hiring Manager' : 'Software Developer',
+              location: '',
+              type: 'Full-time',
+            },
+          };
+          
+          dispatch({ type: 'SET_USER', payload: appUserProfile });
+          console.log('✅ User authenticated with valid token');
+          console.log('🔐 Authentication state:', { isAuthenticated: true, userId: appUserProfile.id });
+          
+          // Load user-specific data
+          if (applications) {
+            dispatch({ type: 'SET_APPLICATIONS', payload: JSON.parse(applications) });
+          }
+          if (notifications) {
+            dispatch({ type: 'SET_NOTIFICATIONS', payload: JSON.parse(notifications) });
+          }
+        } catch (tokenError) {
+          console.error('❌ Token validation failed:', tokenError);
+          // Token is invalid, clear auth data
+          await AsyncStorage.removeItem('authToken');
+          await AsyncStorage.removeItem('user');
           dispatch({ type: 'SET_USER', payload: null });
           dispatch({ type: 'SET_APPLICATIONS', payload: [] });
           dispatch({ type: 'SET_NOTIFICATIONS', payload: [] });
         }
       } else {
-        if (user) {
-          dispatch({ type: 'SET_USER', payload: JSON.parse(user) });
-        }
-        if (applications) {
-          dispatch({ type: 'SET_APPLICATIONS', payload: JSON.parse(applications) });
-        }
-        if (notifications) {
-          dispatch({ type: 'SET_NOTIFICATIONS', payload: JSON.parse(notifications) });
-        }
-        if (savedJobs) {
-          // savedJobs is an array of job IDs, not jobs
-          // This should be handled by a different action if needed
-        }
-        if (appliedJobs) {
-          // appliedJobs is an array of job IDs, not jobs  
-          // This should be handled by a different action if needed
-        }
+        // No token, user is not authenticated
+        console.log('ℹ️ No auth token found, user not authenticated');
+        dispatch({ type: 'SET_USER', payload: null });
+        dispatch({ type: 'SET_APPLICATIONS', payload: [] });
+        dispatch({ type: 'SET_NOTIFICATIONS', payload: [] });
+        console.log('🔐 Authentication state:', { isAuthenticated: false, userId: null });
       }
       
       if (theme) {
@@ -206,12 +228,112 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Context methods
-  const login = (user: UserProfile) => {
-    dispatch({ type: 'SET_USER', payload: user });
+  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      console.log('🔄 Attempting login...');
+      const response: AuthResponse = await authService.login({ email, password });
+      
+      // Store token
+      await AsyncStorage.setItem('authToken', response.token);
+      
+      // Convert API user to app user profile
+      const userProfile: UserProfile = {
+        id: response.user.id,
+        name: response.user.name,
+        email: response.user.email,
+        phone: '',
+        location: '',
+        skills: [],
+        resume: { fileName: '', uploaded: false },
+        profilePicture: { uri: '', uploaded: false },
+        profileCompletion: 50,
+        preferences: {
+          role: response.user.role === 'employer' ? 'Hiring Manager' : 'Software Developer',
+          location: '',
+          type: 'Full-time',
+        },
+      };
+      
+      dispatch({ type: 'SET_USER', payload: userProfile });
+      console.log('✅ Login successful');
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Login failed:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Login failed' 
+      };
+    }
   };
 
-  const logout = () => {
-    dispatch({ type: 'SET_USER', payload: null });
+  const register = async (userData: {
+    email: string;
+    password: string;
+    name: string;
+    phone?: string;
+  }): Promise<{ success: boolean; error?: string }> => {
+    try {
+      console.log('🔄 Attempting registration...');
+      const response: AuthResponse = await authService.register({
+        ...userData,
+        role: 'employee'
+      });
+      
+      // Store token
+      await AsyncStorage.setItem('authToken', response.token);
+      
+      // Convert API user to app user profile
+      const userProfile: UserProfile = {
+        id: response.user.id,
+        name: response.user.name,
+        email: response.user.email,
+        phone: userData.phone || '',
+        location: '',
+        skills: [],
+        resume: { fileName: '', uploaded: false },
+        profilePicture: { uri: '', uploaded: false },
+        profileCompletion: 25,
+        preferences: {
+          role: 'Software Developer',
+          location: '',
+          type: 'Full-time',
+        },
+      };
+      
+      dispatch({ type: 'SET_USER', payload: userProfile });
+      console.log('✅ Registration successful');
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Registration failed:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Registration failed' 
+      };
+    }
+  };
+
+  const logout = async () => {
+    try {
+      // Remove all auth-related data from storage
+      await Promise.all([
+        AsyncStorage.removeItem('authToken'),
+        AsyncStorage.removeItem('user'),
+        AsyncStorage.removeItem('applications'),
+        AsyncStorage.removeItem('notifications'),
+        AsyncStorage.removeItem('savedJobs'),
+        AsyncStorage.removeItem('appliedJobs'),
+      ]);
+      
+      // Clear all user data from state
+      dispatch({ type: 'SET_USER', payload: null });
+      dispatch({ type: 'SET_APPLICATIONS', payload: [] });
+      dispatch({ type: 'SET_NOTIFICATIONS', payload: [] });
+      dispatch({ type: 'SET_CURRENT_SCREEN', payload: 'onboarding' });
+      
+      console.log('✅ Logout successful - all data cleared');
+    } catch (error) {
+      console.error('❌ Logout error:', error);
+    }
   };
 
   const applyToJob = (jobId: string) => {
@@ -267,6 +389,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     state,
     dispatch,
     login,
+    register,
     logout,
     applyToJob,
     saveJob,

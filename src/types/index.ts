@@ -200,8 +200,9 @@ export interface AppState {
 export interface AppContextType {
   state: AppState;
   dispatch: React.Dispatch<AppAction>;
-  login: (user: UserProfile) => void;
-  logout: () => void;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  register: (userData: { email: string; password: string; name: string; phone?: string }) => Promise<{ success: boolean; error?: string }>;
+  logout: () => Promise<void>;
   applyToJob: (jobId: string) => void;
   saveJob: (jobId: string) => void;
   unsaveJob: (jobId: string) => void;

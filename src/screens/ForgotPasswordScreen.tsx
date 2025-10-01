@@ -2,22 +2,22 @@ import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, StatusBar, Alert } from 'react-native';
 import { Text, Button, Card, useTheme, TextInput, IconButton } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useApp } from '../context/AppContext';
 import { Colors } from '../constants/colors';
 import { Sizes } from '../constants/sizes';
 
 const ForgotPasswordScreen: React.FC = () => {
   const theme = useTheme();
-  const navigation = useNavigation();
-  const isDark = theme.dark;
+  const { state, navigateToScreen } = useApp();
+  const isDark = state.theme === 'dark';
   
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
 
   const handleBackToLogin = () => {
-    navigation.goBack();
+    navigateToScreen('login');
   };
 
   const handleSendResetEmail = async () => {

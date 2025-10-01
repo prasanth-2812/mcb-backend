@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, StatusBar, TouchableOpacity, Alert, KeyboardAvoidingView, Platform } from 'react-native';
-import { Text, Button, Card, useTheme, TextInput, IconButton, ProgressBar } from 'react-native-paper';
+import { Text, Button, Card, useTheme, IconButton, ProgressBar } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { 
   useSharedValue, 
@@ -14,6 +14,8 @@ import { Colors } from '../constants/colors';
 import { Sizes } from '../constants/sizes';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Job } from '../types';
+import ValidatedInput from '../components/ValidatedInput';
+import { validateForm, VALIDATION_RULES, ERROR_MESSAGES } from '../utils/validation';
 
 interface JobApplicationScreenProps {
   route: {
@@ -48,6 +50,7 @@ const JobApplicationScreen: React.FC<JobApplicationScreenProps> = ({ route }) =>
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDraft, setIsDraft] = useState(false);
+  const [fieldValidations, setFieldValidations] = useState<{[key: string]: boolean}>({});
   
   const [job, setJob] = useState<Job | null>(null);
   
@@ -104,31 +107,25 @@ const JobApplicationScreen: React.FC<JobApplicationScreenProps> = ({ route }) =>
     }
   };
 
-  const validateForm = () => {
-    const newErrors: {[key: string]: string} = {};
+  const handleFieldValidation = (field: string, isValid: boolean) => {
+    setFieldValidations(prev => ({ ...prev, [field]: isValid }));
+  };
+
+  const validateFormData = () => {
+    const validationErrors = validateForm(formData, {
+      fullName: VALIDATION_RULES.fullName,
+      email: VALIDATION_RULES.email,
+      phone: VALIDATION_RULES.phone,
+      coverLetter: VALIDATION_RULES.coverLetter,
+    });
     
-    if (!formData.fullName.trim()) {
-      newErrors.fullName = 'Full name is required';
-    }
-    
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
-    }
-    
-    if (!formData.phone.trim()) {
-      newErrors.phone = 'Phone number is required';
-    } else if (!/^[\+]?[1-9][\d]{0,15}$/.test(formData.phone.replace(/\s/g, ''))) {
-      newErrors.phone = 'Please enter a valid phone number';
-    }
-    
+    // Add resume validation
     if (!resumeFile.uploaded) {
-      newErrors.resume = 'Resume upload is required';
+      validationErrors.resume = ERROR_MESSAGES.file.required;
     }
     
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setErrors(validationErrors);
+    return Object.keys(validationErrors).length === 0;
   };
 
   const handleResumeUpload = () => {
@@ -171,8 +168,8 @@ const JobApplicationScreen: React.FC<JobApplicationScreenProps> = ({ route }) =>
   };
 
   const handleSubmit = async () => {
-    if (!validateForm()) {
-      Alert.alert('Validation Error', 'Please fill in all required fields correctly.');
+    if (!validateFormData()) {
+      Alert.alert('Validation Error', 'Please fix the errors below and try again.');
       return;
     }
 
@@ -227,9 +224,9 @@ const JobApplicationScreen: React.FC<JobApplicationScreenProps> = ({ route }) =>
   };
 
   const isFormValid = () => {
-    return formData.fullName.trim() !== '' && 
-           formData.email.trim() !== '' && 
-           formData.phone.trim() !== '' && 
+    return fieldValidations.fullName &&
+           fieldValidations.email &&
+           fieldValidations.phone &&
            resumeFile.uploaded &&
            Object.keys(errors).length === 0;
   };
@@ -358,59 +355,50 @@ const JobApplicationScreen: React.FC<JobApplicationScreenProps> = ({ route }) =>
               </Text>
               
               <View style={styles.formGroup}>
-                <TextInput
+                <ValidatedInput
                   label="Full Name *"
                   value={formData.fullName}
                   onChangeText={(text) => handleInputChange('fullName', text)}
-                  mode="outlined"
-                  style={styles.input}
+                  onValidationChange={(isValid) => handleFieldValidation('fullName', isValid)}
+                  fieldName="fullName"
+                  formData={formData}
                   textColor={isDark ? Colors.white : Colors.textPrimary}
-                  outlineColor={errors.fullName ? '#F44336' : (isDark ? Colors.gray : Colors.border)}
+                  outlineColor={isDark ? Colors.gray : Colors.border}
                   activeOutlineColor="#1976D2"
                   error={!!errors.fullName}
+                  style={styles.input}
                 />
-                {errors.fullName && (
-                  <Text variant="bodySmall" style={styles.errorText}>
-                    {errors.fullName}
-                  </Text>
-                )}
                 
-                <TextInput
+                <ValidatedInput
                   label="Email Address *"
                   value={formData.email}
                   onChangeText={(text) => handleInputChange('email', text)}
-                  mode="outlined"
-                  style={styles.input}
+                  onValidationChange={(isValid) => handleFieldValidation('email', isValid)}
+                  fieldName="email"
+                  formData={formData}
                   textColor={isDark ? Colors.white : Colors.textPrimary}
-                  outlineColor={errors.email ? '#F44336' : (isDark ? Colors.gray : Colors.border)}
+                  outlineColor={isDark ? Colors.gray : Colors.border}
                   activeOutlineColor="#1976D2"
                   keyboardType="email-address"
                   autoCapitalize="none"
                   error={!!errors.email}
+                  style={styles.input}
                 />
-                {errors.email && (
-                  <Text variant="bodySmall" style={styles.errorText}>
-                    {errors.email}
-                  </Text>
-                )}
                 
-                <TextInput
+                <ValidatedInput
                   label="Phone Number *"
                   value={formData.phone}
                   onChangeText={(text) => handleInputChange('phone', text)}
-                  mode="outlined"
-                  style={styles.input}
+                  onValidationChange={(isValid) => handleFieldValidation('phone', isValid)}
+                  fieldName="phone"
+                  formData={formData}
                   textColor={isDark ? Colors.white : Colors.textPrimary}
-                  outlineColor={errors.phone ? '#F44336' : (isDark ? Colors.gray : Colors.border)}
+                  outlineColor={isDark ? Colors.gray : Colors.border}
                   activeOutlineColor="#1976D2"
                   keyboardType="phone-pad"
                   error={!!errors.phone}
+                  style={styles.input}
                 />
-                {errors.phone && (
-                  <Text variant="bodySmall" style={styles.errorText}>
-                    {errors.phone}
-                  </Text>
-                )}
                 
                 {/* Resume Upload */}
                 <View style={styles.resumeSection}>
@@ -461,18 +449,21 @@ const JobApplicationScreen: React.FC<JobApplicationScreenProps> = ({ route }) =>
                   )}
                 </View>
                 
-                <TextInput
+                <ValidatedInput
                   label="Cover Letter (Optional)"
                   value={formData.coverLetter}
                   onChangeText={(text) => handleInputChange('coverLetter', text)}
-                  mode="outlined"
-                  style={styles.input}
+                  onValidationChange={(isValid) => handleFieldValidation('coverLetter', isValid)}
+                  fieldName="coverLetter"
+                  formData={formData}
                   textColor={isDark ? Colors.white : Colors.textPrimary}
                   outlineColor={isDark ? Colors.gray : Colors.border}
                   activeOutlineColor="#1976D2"
                   multiline
                   numberOfLines={4}
                   placeholder="Tell us why you're interested in this position..."
+                  error={!!errors.coverLetter}
+                  style={styles.input}
                 />
               </View>
             </Card.Content>

@@ -1,14 +1,15 @@
 import { Sequelize } from 'sequelize';
+import path from 'path';
 
-const dbName = process.env.DB_NAME || 'mcb';
-const dbUser = process.env.DB_USER || 'root';
-const dbPass = process.env.DB_PASSWORD || 'secret';
-const dbHost = process.env.DB_HOST || 'localhost';
-const dbPort = Number(process.env.DB_PORT || 3306);
+// Use SQLite for testing/development
+const dbPath = path.join(process.cwd(), 'database.sqlite');
 
-export const sequelize = new Sequelize(dbName, dbUser, dbPass, {
-  host: dbHost,
-  port: dbPort,
-  dialect: 'mysql',
+export const sequelize = new Sequelize({
+  dialect: 'sqlite',
+  storage: dbPath,
   logging: process.env.NODE_ENV === 'development' ? console.log : false,
+  define: {
+    timestamps: true,
+    underscored: true,
+  },
 });

@@ -11,14 +11,14 @@ export interface CandidateAttributes {
 export type CandidateCreation = Optional<CandidateAttributes, 'id'>;
 
 export class Candidate extends Model<CandidateAttributes, CandidateCreation> implements CandidateAttributes {
-  public id!: number;
-  public name!: string;
-  public jobTitle!: string | null;
-  public location!: string | null;
+  declare id: number;
+  declare name: string;
+  declare jobTitle: string | null;
+  declare location: string | null;
 }
 
 Candidate.init({
-  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: false },
+  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   name: { type: DataTypes.STRING, allowNull: false },
   jobTitle: { type: DataTypes.STRING },
   location: { type: DataTypes.STRING },

@@ -36,6 +36,16 @@ export interface ApiCandidate {
 }
 
 class ApiService {
+  private async getAuthToken(): Promise<string | null> {
+    try {
+      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+      return await AsyncStorage.getItem('authToken');
+    } catch (error) {
+      console.error('Error getting auth token:', error);
+      return null;
+    }
+  }
+
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     // Try primary URL first, then fallback
     const urls = [API_BASE_URL, API_BASE_URL_FALLBACK];
@@ -46,9 +56,13 @@ class ApiService {
       
       console.log(`🌐 API Request: ${options.method || 'GET'} ${url}`);
       
+      // Get auth token if available
+      const token = await this.getAuthToken();
+      
       const config: RequestInit = {
         headers: {
           'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` }),
           ...options.headers,
         },
         ...options,
