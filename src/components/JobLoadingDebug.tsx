@@ -25,16 +25,6 @@ const JobLoadingDebug: React.FC = () => {
     console.log('🔍 JobLoadingDebug:', info);
   }, [state.jobs, state.isLoading, state.user]);
 
-  const testApiConnection = async () => {
-    try {
-      console.log('🧪 Testing API connection from debug component...');
-      const response = await fetch('http://10.115.43.116:4000/api/jobs');
-      const data = await response.json();
-      console.log('✅ API test successful:', data.length, 'jobs');
-    } catch (error) {
-      console.error('❌ API test failed:', error);
-    }
-  };
 
   return (
     <Card style={styles.debugCard}>
@@ -48,13 +38,6 @@ const JobLoadingDebug: React.FC = () => {
           <Text style={styles.info}>First Job: {debugInfo.firstJob.title}</Text>
         )}
         <Text style={styles.info}>Timestamp: {debugInfo.timestamp}</Text>
-        <Button 
-          mode="contained" 
-          onPress={testApiConnection}
-          style={styles.button}
-        >
-          Test API
-        </Button>
       </Card.Content>
     </Card>
   );
@@ -73,9 +56,6 @@ const styles = StyleSheet.create({
   info: {
     fontSize: 14,
     marginBottom: 4,
-  },
-  button: {
-    marginTop: 8,
   },
 });
 

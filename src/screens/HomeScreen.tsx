@@ -17,7 +17,7 @@ const { width: screenWidth } = Dimensions.get('window');
 
 const HomeScreen: React.FC = () => {
   const theme = useTheme();
-  const { state, dispatch } = useApp();
+  const { state, dispatch, saveJob, unsaveJob } = useApp();
   const navigation = useNavigation();
   const isDark = state.theme === 'dark';
   
@@ -137,12 +137,22 @@ const HomeScreen: React.FC = () => {
     (navigation as any).navigate('JobDetails', { jobId: job.id });
   };
 
-  const handleJobApply = (jobId: string) => {
-    console.log('Applying to job:', jobId);
+  const handleJobApply = (job: any) => {
+    console.log('Apply button clicked for job:', job.id);
+    // Navigate to job details first, same as clicking job card
+    (navigation as any).navigate('JobDetails', { jobId: job.id });
   };
 
-  const handleJobSave = (jobId: string) => {
-    console.log('Saving job:', jobId);
+  const handleJobSave = async (jobId: string) => {
+    try {
+      if (state.savedJobs.includes(jobId)) {
+        await unsaveJob(jobId);
+      } else {
+        await saveJob(jobId);
+      }
+    } catch (error) {
+      console.error('❌ Failed to save/unsave job:', error);
+    }
   };
 
   const getUnreadNotifications = () => {
@@ -528,7 +538,7 @@ const HomeScreen: React.FC = () => {
                           
                           <TouchableOpacity 
                             style={[styles.actionButton, styles.applyButton]}
-                            onPress={() => handleJobApply(job?.id)}
+                            onPress={() => handleJobApply(job)}
                           >
                             <MaterialCommunityIcons name="send" size={18} color="#FFFFFF" />
                             <Text style={[styles.actionButtonText, styles.applyButtonText]}>

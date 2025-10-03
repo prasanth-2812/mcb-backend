@@ -145,30 +145,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const loadJobsInBackground = async () => {
     try {
-      console.log('🔄 AppContext: Starting loadJobsInBackground...');
-      
       // Try to load cached jobs first
       const cachedJobs = await AsyncStorage.getItem('cachedJobs');
       if (cachedJobs) {
         const jobs = JSON.parse(cachedJobs);
         dispatch({ type: 'SET_JOBS', payload: jobs });
-        console.log(`📱 AppContext: Loaded ${jobs.length} cached jobs`);
-      } else {
-        console.log('📱 AppContext: No cached jobs found');
       }
 
       // Then load fresh data from API
-      console.log('🔄 AppContext: Loading fresh jobs from API in background...');
       const apiData = await loadDataFromAPI();
-      console.log(`📊 AppContext: API returned ${apiData.jobs.length} jobs`);
       dispatch({ type: 'SET_JOBS', payload: apiData.jobs });
       
       // Cache the fresh data
       await AsyncStorage.setItem('cachedJobs', JSON.stringify(apiData.jobs));
-      console.log(`✅ AppContext: Loaded ${apiData.jobs.length} fresh jobs from API and cached them`);
     } catch (apiError) {
       console.error('❌ AppContext: API loading failed:', apiError);
-      console.error('❌ AppContext: Error details:', apiError.message);
       // Keep cached jobs if API fails
     }
   };
@@ -458,7 +449,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       
       // Check if job was already saved
       if (result.id === 'already-saved') {
-        console.log('ℹ️ Job already saved, updating state');
         // Still update the state to reflect the current saved status
         if (!state.savedJobs.includes(jobId)) {
           dispatch({ type: 'SAVE_JOB', payload: jobId });

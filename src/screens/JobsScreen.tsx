@@ -9,7 +9,6 @@ import { Sizes } from '../constants/sizes';
 import JobCard from '../components/JobCard';
 import SearchBar from '../components/SearchBar';
 import FilterJobsModal from '../components/FilterJobsModal';
-import JobLoadingDebug from '../components/JobLoadingDebug';
 import { Job, FilterOptions } from '../types';
 import jobApplicationService from '../services/jobApplicationService';
 import toast from '../services/toastService';
@@ -45,13 +44,6 @@ const JobsScreen: React.FC<JobsScreenProps> = ({ navigation }) => {
     checkPendingApplication();
   }, [state.user]);
 
-  // Debug effect to log jobs state changes
-  useEffect(() => {
-    console.log('📱 JobsScreen: Jobs state changed');
-    console.log(`   - Jobs count: ${state.jobs.length}`);
-    console.log(`   - Is loading: ${state.isLoading}`);
-    console.log(`   - Filtered jobs: ${filteredJobs.length}`);
-  }, [state.jobs, state.isLoading, filteredJobs]);
 
   const checkPendingApplication = async () => {
     if (state.user) {
@@ -210,16 +202,10 @@ const JobsScreen: React.FC<JobsScreenProps> = ({ navigation }) => {
 
   const handleJobSave = async (jobId: string) => {
     try {
-      console.log(`🔄 HandleJobSave: Job ${jobId}, currently saved: ${state.savedJobs.includes(jobId)}`);
-      
       if (state.savedJobs.includes(jobId)) {
-        console.log(`🔄 Unsaving job ${jobId}`);
         await unsaveJob(jobId);
-        console.log(`✅ Job ${jobId} unsaved successfully`);
       } else {
-        console.log(`🔄 Saving job ${jobId}`);
         await saveJob(jobId);
-        console.log(`✅ Job ${jobId} saved successfully`);
       }
     } catch (error) {
       console.error('❌ Failed to save/unsave job:', error);
@@ -576,8 +562,6 @@ const JobsScreen: React.FC<JobsScreenProps> = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#F9F9F9" />
       
-      {/* Debug Component - Remove this after fixing */}
-      <JobLoadingDebug />
       
       <ScrollView 
         style={styles.scrollView}
