@@ -2,6 +2,7 @@ import express from 'express';
 import morgan from 'morgan';
 import helmet from 'helmet';
 import cors from 'cors';
+import path from 'path';
 import routes from './routes';
 import { errorHandler } from './middleware/errorHandler';
 import swaggerUi from 'swagger-ui-express';
@@ -12,6 +13,9 @@ app.use(helmet());
 app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
+
+// Serve static files from uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.get('/openapi.json', (_req, res) => res.json(swaggerSpec));

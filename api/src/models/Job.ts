@@ -5,6 +5,7 @@ export interface JobAttributes {
   id: string;
   title: string;
   company: string;
+  companyId?: string | null;
   location?: string | null;
   type?: string | null;
   category?: string | null;
@@ -15,20 +16,22 @@ export interface JobAttributes {
 export type JobCreation = Optional<JobAttributes, 'id'>;
 
 export class Job extends Model<JobAttributes, JobCreation> implements JobAttributes {
-  declare id: string;
-  declare title: string;
-  declare company: string;
-  declare location: string | null;
-  declare type: string | null;
-  declare category: string | null;
-  declare isRemote: boolean | null;
-  declare description: string | null;
+  public id!: string;
+  public title!: string;
+  public company!: string;
+  public companyId!: string | null;
+  public location!: string | null;
+  public type!: string | null;
+  public category!: string | null;
+  public isRemote!: boolean | null;
+  public description!: string | null;
 }
 
 Job.init({
   id: { type: DataTypes.STRING, primaryKey: true },
   title: { type: DataTypes.STRING, allowNull: false },
   company: { type: DataTypes.STRING, allowNull: false },
+  companyId: { type: DataTypes.UUID, allowNull: true },
   location: { type: DataTypes.STRING },
   type: { type: DataTypes.STRING },
   category: { type: DataTypes.STRING },
