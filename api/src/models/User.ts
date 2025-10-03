@@ -18,17 +18,17 @@ export interface UserAttributes {
 export type UserCreation = Optional<UserAttributes, 'id' | 'phone' | 'createdAt' | 'updatedAt'>;
 
 export class User extends Model<UserAttributes, UserCreation> implements UserAttributes {
-  public id!: string;
-  public email!: string;
-  public name!: string;
-  public password!: string;
-  public phone!: string | null;
-  public role!: 'employee' | 'employer';
-  public skills!: string[] | null;
-  public resumeUrl!: string | null;
-  public avatarUrl!: string | null;
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
+  declare id: string;
+  declare email: string;
+  declare name: string;
+  declare password: string;
+  declare phone: string | null;
+  declare role: 'employee' | 'employer';
+  declare skills: string[] | null;
+  declare resumeUrl: string | null;
+  declare avatarUrl: string | null;
+  declare readonly createdAt: Date;
+  declare readonly updatedAt: Date;
 }
 
 User.init({

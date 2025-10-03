@@ -176,30 +176,12 @@ const JobApplicationScreen: React.FC<JobApplicationScreenProps> = ({ route }) =>
     setIsSubmitting(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Create application object
-      const application = {
-        id: Date.now().toString(),
-        jobId: job?.id || '',
-        jobTitle: job?.title || '',
-        company: job?.company || '',
-        appliedDate: new Date().toISOString(),
-        status: 'applied' as const,
-        statusHistory: [{
-          status: 'applied' as const,
-          date: new Date().toISOString(),
-          description: 'Application submitted successfully'
-        }],
-        notes: formData.coverLetter,
-        interviewDate: null,
-        salary: job?.salary || '',
-        location: job?.location || '',
-      };
-
-      // Apply to job
-      applyToJob(application);
+      // Apply to job using the API
+      await applyToJob(
+        job?.id || '', 
+        formData.coverLetter, 
+        resumeFile.uploaded ? `https://example.com/resume.pdf` : undefined
+      );
       
       Alert.alert(
         'Application Submitted!',

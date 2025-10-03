@@ -17,16 +17,16 @@ export interface CompanyAttributes {
 export type CompanyCreation = Optional<CompanyAttributes, 'id' | 'createdAt' | 'updatedAt'>;
 
 export class Company extends Model<CompanyAttributes, CompanyCreation> implements CompanyAttributes {
-  public id!: string;
-  public name!: string;
-  public description!: string | null;
-  public website!: string | null;
-  public logo!: string | null;
-  public industry!: string | null;
-  public size!: string | null;
-  public location!: string | null;
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
+  declare id: string;
+  declare name: string;
+  declare description: string | null;
+  declare website: string | null;
+  declare logo: string | null;
+  declare industry: string | null;
+  declare size: string | null;
+  declare location: string | null;
+  declare readonly createdAt: Date;
+  declare readonly updatedAt: Date;
 }
 
 Company.init({

@@ -13,12 +13,12 @@ export interface SavedJobAttributes {
 export type SavedJobCreation = Optional<SavedJobAttributes, 'id' | 'savedAt' | 'createdAt' | 'updatedAt'>;
 
 export class SavedJob extends Model<SavedJobAttributes, SavedJobCreation> implements SavedJobAttributes {
-  public id!: string;
-  public userId!: string;
-  public jobId!: string;
-  public savedAt!: Date;
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
+  declare id: string;
+  declare userId: string;
+  declare jobId: string;
+  declare savedAt: Date;
+  declare readonly createdAt: Date;
+  declare readonly updatedAt: Date;
 }
 
 SavedJob.init({

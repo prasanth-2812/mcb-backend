@@ -16,15 +16,15 @@ export interface ApplicationAttributes {
 export type ApplicationCreation = Optional<ApplicationAttributes, 'id' | 'appliedAt' | 'createdAt' | 'updatedAt'>;
 
 export class Application extends Model<ApplicationAttributes, ApplicationCreation> implements ApplicationAttributes {
-  public id!: string;
-  public userId!: string;
-  public jobId!: string;
-  public status!: 'pending' | 'reviewed' | 'accepted' | 'rejected';
-  public coverLetter!: string | null;
-  public resumeUrl!: string | null;
-  public appliedAt!: Date;
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
+  declare id: string;
+  declare userId: string;
+  declare jobId: string;
+  declare status: 'pending' | 'reviewed' | 'accepted' | 'rejected';
+  declare coverLetter: string | null;
+  declare resumeUrl: string | null;
+  declare appliedAt: Date;
+  declare readonly createdAt: Date;
+  declare readonly updatedAt: Date;
 }
 
 Application.init({

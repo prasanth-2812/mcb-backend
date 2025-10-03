@@ -1,6 +1,6 @@
 // Saved Jobs service for handling saved jobs API calls
 const API_BASE_URL = 'http://10.115.43.116:4000/api';
-const API_BASE_URL_FALLBACK = 'http://localhost:4000/api';
+const API_BASE_URL_FALLBACK = 'http://10.115.43.116:4000/api';
 
 export interface SavedJob {
   id: string;
@@ -72,6 +72,13 @@ class SavedJobsService {
         
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
+          
+          // Handle 409 (already saved) gracefully
+          if (response.status === 409) {
+            console.log(`ℹ️ Job already saved: ${errorData.message}`);
+            return { id: 'already-saved', message: errorData.message };
+          }
+          
           console.error(`❌ Saved Jobs HTTP Error Response:`, errorData);
           throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
         }
@@ -139,3 +146,4 @@ class SavedJobsService {
 
 export const savedJobsService = new SavedJobsService();
 export default savedJobsService;
+

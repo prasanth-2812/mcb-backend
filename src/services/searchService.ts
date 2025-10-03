@@ -129,7 +129,7 @@ class SearchService {
     });
     
     const queryString = queryParams.toString();
-    const endpoint = queryString ? `/jobs/search?${queryString}` : '/jobs/search';
+    const endpoint = queryString ? `/search/jobs?${queryString}` : '/search/jobs';
     
     return this.request<SearchResponse>(endpoint);
   }
@@ -253,3 +253,4 @@ class SearchService {
 
 export const searchService = new SearchService();
 export default searchService;
+

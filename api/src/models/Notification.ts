@@ -15,14 +15,14 @@ export interface NotificationAttributes {
 export type NotificationCreation = Optional<NotificationAttributes, 'id' | 'isRead' | 'createdAt' | 'updatedAt'>;
 
 export class Notification extends Model<NotificationAttributes, NotificationCreation> implements NotificationAttributes {
-  public id!: string;
-  public userId!: string;
-  public title!: string;
-  public message!: string;
-  public type!: 'application' | 'job' | 'system' | 'message';
-  public isRead!: boolean;
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
+  declare id: string;
+  declare userId: string;
+  declare title: string;
+  declare message: string;
+  declare type: 'application' | 'job' | 'system' | 'message';
+  declare isRead: boolean;
+  declare readonly createdAt: Date;
+  declare readonly updatedAt: Date;
 }
 
 Notification.init({

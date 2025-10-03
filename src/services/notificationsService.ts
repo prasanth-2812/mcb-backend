@@ -164,3 +164,4 @@ class NotificationsService {
 
 export const notificationsService = new NotificationsService();
 export default notificationsService;
+

@@ -9,6 +9,7 @@ import { Sizes } from '../constants/sizes';
 import JobCard from '../components/JobCard';
 import SearchBar from '../components/SearchBar';
 import FilterJobsModal from '../components/FilterJobsModal';
+import JobLoadingDebug from '../components/JobLoadingDebug';
 import { Job, FilterOptions } from '../types';
 import jobApplicationService from '../services/jobApplicationService';
 import toast from '../services/toastService';
@@ -22,7 +23,7 @@ interface JobsScreenProps {
 
 const JobsScreen: React.FC<JobsScreenProps> = ({ navigation }) => {
   const theme = useTheme();
-  const { state, dispatch } = useApp();
+  const { state, dispatch, saveJob, unsaveJob } = useApp();
   const isDark = state.theme === 'dark';
   
   const [searchQuery, setSearchQuery] = useState('');
@@ -40,15 +41,17 @@ const JobsScreen: React.FC<JobsScreenProps> = ({ navigation }) => {
   const [showUrgentOnly, setShowUrgentOnly] = useState(false);
 
   useEffect(() => {
-    // Load jobs if not already loaded
-    if (state.jobs.length === 0) {
-      // Try to load from API first
-      loadJobsFromAPI();
-    }
-    
     // Check for pending job application after login
     checkPendingApplication();
   }, [state.user]);
+
+  // Debug effect to log jobs state changes
+  useEffect(() => {
+    console.log('📱 JobsScreen: Jobs state changed');
+    console.log(`   - Jobs count: ${state.jobs.length}`);
+    console.log(`   - Is loading: ${state.isLoading}`);
+    console.log(`   - Filtered jobs: ${filteredJobs.length}`);
+  }, [state.jobs, state.isLoading, filteredJobs]);
 
   const checkPendingApplication = async () => {
     if (state.user) {
@@ -115,17 +118,6 @@ const JobsScreen: React.FC<JobsScreenProps> = ({ navigation }) => {
     }
   };
 
-  const loadJobsFromAPI = async () => {
-    try {
-      const { loadDataFromAPI } = await import('../utils/dataLoader');
-      const apiData = await loadDataFromAPI();
-      dispatch({ type: 'SET_JOBS', payload: apiData.jobs });
-    } catch (error) {
-      console.error('Failed to load jobs from API:', error);
-      // No fallback - only use API data
-      dispatch({ type: 'SET_JOBS', payload: [] });
-    }
-  };
 
   useEffect(() => {
     // Filter jobs based on search query and filters
@@ -202,7 +194,8 @@ const JobsScreen: React.FC<JobsScreenProps> = ({ navigation }) => {
 
   const handleApplyToJob = async (job: Job) => {
     console.log(`🔄 Apply button clicked for job: ${job.id}`);
-    await handleJobApply(job.id);
+    // Navigate to job details first, same as clicking job card
+    navigation.navigate('JobDetails', { jobId: job.id });
   };
 
   const getJobMatchPercentage = (job: Job) => {
@@ -217,10 +210,16 @@ const JobsScreen: React.FC<JobsScreenProps> = ({ navigation }) => {
 
   const handleJobSave = async (jobId: string) => {
     try {
+      console.log(`🔄 HandleJobSave: Job ${jobId}, currently saved: ${state.savedJobs.includes(jobId)}`);
+      
       if (state.savedJobs.includes(jobId)) {
+        console.log(`🔄 Unsaving job ${jobId}`);
         await unsaveJob(jobId);
+        console.log(`✅ Job ${jobId} unsaved successfully`);
       } else {
+        console.log(`🔄 Saving job ${jobId}`);
         await saveJob(jobId);
+        console.log(`✅ Job ${jobId} saved successfully`);
       }
     } catch (error) {
       console.error('❌ Failed to save/unsave job:', error);
@@ -421,7 +420,8 @@ const JobsScreen: React.FC<JobsScreenProps> = ({ navigation }) => {
   const renderJobItem = ({ item }: { item: Job }) => (
     <JobCard 
       job={item} 
-      onSave={() => console.log('Save job:', item.id)}
+      onPress={() => navigation.navigate('JobDetails', { jobId: item.id })}
+      onSave={() => handleJobSave(item.id)}
       onApply={() => handleApplyToJob(item)}
     />
   );
@@ -575,6 +575,9 @@ const JobsScreen: React.FC<JobsScreenProps> = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#F9F9F9" />
+      
+      {/* Debug Component - Remove this after fixing */}
+      <JobLoadingDebug />
       
       <ScrollView 
         style={styles.scrollView}
