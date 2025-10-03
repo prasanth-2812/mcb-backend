@@ -13,7 +13,7 @@ import { useApp } from '../context/AppContext';
 import { Colors } from '../constants/colors';
 import { Sizes } from '../constants/sizes';
 import { Application, ApplicationStatus } from '../types';
-import applicationsData from '../data/applications.json';
+// Removed dummy data import - using API data only
 
 const ApplicationsScreen: React.FC = () => {
   const theme = useTheme();
@@ -27,11 +27,7 @@ const ApplicationsScreen: React.FC = () => {
   const contentOpacity = useSharedValue(0);
 
   useEffect(() => {
-    // Load applications if not already loaded
-    if (state.applications.length === 0) {
-      dispatch({ type: 'SET_APPLICATIONS', payload: applicationsData as Application[] });
-    }
-
+    // Applications are loaded from API in AppContext
     // Animate content entrance
     contentOpacity.value = withTiming(1, { duration: 600 });
   }, []);

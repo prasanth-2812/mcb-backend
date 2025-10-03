@@ -8,7 +8,7 @@ import { useApp } from '../context/AppContext';
 import { Colors } from '../constants/colors';
 import { Sizes } from '../constants/sizes';
 import { Notification } from '../types';
-import notificationsData from '../data/notifications.json';
+// Removed dummy data import - using API data only
 
 const NotificationsScreen: React.FC = () => {
   const theme = useTheme();
@@ -25,15 +25,8 @@ const NotificationsScreen: React.FC = () => {
   
 
   useEffect(() => {
-    // Load notifications if not already loaded
-    if (state.notifications.length === 0) {
-      const transformedNotifications = notificationsData.map(notification => ({
-        ...notification,
-        timestamp: notification.createdAt
-      }));
-      dispatch({ type: 'SET_NOTIFICATIONS', payload: transformedNotifications as any });
-    }
-
+    // Notifications are loaded from API in AppContext
+    console.log('📱 Notifications loaded from API:', state.notifications.length);
   }, []);
 
   useEffect(() => {

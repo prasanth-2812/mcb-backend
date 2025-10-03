@@ -56,14 +56,18 @@ const JobCard: React.FC<JobCardProps> = ({
     onPress?.();
   };
 
-  const handleSave = () => {
-    if (isSaved) {
-      unsaveJob(job.id);
-    } else {
-      saveJob(job.id);
+  const handleSave = async () => {
+    try {
+      if (isSaved) {
+        await unsaveJob(job.id);
+      } else {
+        await saveJob(job.id);
+      }
+      
+      onSave?.();
+    } catch (error) {
+      console.error('❌ Failed to save/unsave job:', error);
     }
-    
-    onSave?.();
   };
 
   const handleShare = () => {

@@ -215,11 +215,15 @@ const JobsScreen: React.FC<JobsScreenProps> = ({ navigation }) => {
     return Math.min(95, Math.max(60, 60 + (matchingSkills.length * 10)));
   };
 
-  const handleJobSave = (jobId: string) => {
-    if (state.savedJobs.includes(jobId)) {
-      dispatch({ type: 'UNSAVE_JOB', payload: jobId });
-    } else {
-      dispatch({ type: 'SAVE_JOB', payload: jobId });
+  const handleJobSave = async (jobId: string) => {
+    try {
+      if (state.savedJobs.includes(jobId)) {
+        await unsaveJob(jobId);
+      } else {
+        await saveJob(jobId);
+      }
+    } catch (error) {
+      console.error('❌ Failed to save/unsave job:', error);
     }
   };
 

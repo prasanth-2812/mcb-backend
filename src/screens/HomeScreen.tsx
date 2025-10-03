@@ -11,7 +11,7 @@ import ProfileCard from '../components/ProfileCard';
 import JobCard from '../components/JobCard';
 import SearchBar from '../components/SearchBar';
 import JobCardSkeleton from '../components/JobCardSkeleton';
-import notificationsData from '../data/notifications.json';
+// Removed dummy data import - using API data only
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -44,11 +44,8 @@ const HomeScreen: React.FC = () => {
       
       // Load notifications if not already loaded
       if (state.notifications.length === 0) {
-        const transformedNotifications = notificationsData.map(notification => ({
-          ...notification,
-          timestamp: notification.createdAt
-        }));
-        dispatch({ type: 'SET_NOTIFICATIONS', payload: transformedNotifications as any });
+        // Notifications will be loaded from API in AppContext
+        console.log('📱 Notifications will be loaded from API');
       }
       
       // Add a small delay to show loading state
@@ -113,6 +110,17 @@ const HomeScreen: React.FC = () => {
     const recentJobs = state.jobs.slice(0, 3);
     console.log('🏠 getRecentJobs called. Total jobs:', state.jobs.length, 'Recent jobs:', recentJobs.length);
     return recentJobs;
+  };
+
+  const loadRecommendedJobs = async () => {
+    try {
+      const recommendedJobs = await getRecommendedJobs();
+      console.log('🏠 Loaded recommended jobs:', recommendedJobs.length);
+      return recommendedJobs;
+    } catch (error) {
+      console.error('❌ Failed to load recommended jobs:', error);
+      return [];
+    }
   };
 
   const getJobMatchPercentage = (job: any) => {

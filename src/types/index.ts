@@ -204,14 +204,19 @@ export interface AppContextType {
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   register: (userData: { email: string; password: string; name: string; phone?: string }) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
-  applyToJob: (jobId: string) => void;
-  saveJob: (jobId: string) => void;
-  unsaveJob: (jobId: string) => void;
-  markNotificationAsRead: (notificationId: string) => void;
-  updateProfile: (profile: Partial<UserProfile>) => void;
+  applyToJob: (jobId: string, coverLetter?: string, resumeUrl?: string) => Promise<void>;
+  saveJob: (jobId: string) => Promise<void>;
+  unsaveJob: (jobId: string) => Promise<void>;
+  markNotificationAsRead: (notificationId: string) => Promise<void>;
+  updateProfile: (profile: Partial<UserProfile>) => Promise<void>;
   toggleTheme: () => void;
   navigateToScreen: (screen: 'onboarding' | 'login' | 'signup' | 'forgot-password' | 'main') => void;
   setOnboardingComplete: (complete: boolean) => void;
+  refreshApplications: () => Promise<void>;
+  refreshNotifications: () => Promise<void>;
+  refreshSavedJobs: () => Promise<void>;
+  searchJobs: (query: string, filters?: any) => Promise<Job[]>;
+  getRecommendedJobs: () => Promise<Job[]>;
 }
 
 export type AppAction =

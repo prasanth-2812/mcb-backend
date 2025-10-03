@@ -3,6 +3,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppState, AppContextType, AppAction, UserProfile, Job, Application, Notification } from '../types';
 import { loadInitialData, loadDataFromAPI } from '../utils/dataLoader';
 import { authService, AuthResponse } from '../services/authService';
+import { applicationsService } from '../services/applicationsService';
+import { savedJobsService } from '../services/savedJobsService';
+import { notificationsService } from '../services/notificationsService';
+import { profileService } from '../services/profileService';
+import { searchService } from '../services/searchService';
+import { companiesService } from '../services/companiesService';
+import { analyticsService } from '../services/analyticsService';
 
 // Initial state
 const initialState: AppState = {
@@ -163,13 +170,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const loadAppData = async () => {
     try {
       // Load local data first (fast)
-      const [authToken, user, applications, notifications, savedJobs, appliedJobs, theme, onboardingComplete] = await Promise.all([
+      const [authToken, user, theme, onboardingComplete] = await Promise.all([
         AsyncStorage.getItem('authToken'),
         AsyncStorage.getItem('user'),
-        AsyncStorage.getItem('applications'),
-        AsyncStorage.getItem('notifications'),
-        AsyncStorage.getItem('savedJobs'),
-        AsyncStorage.getItem('appliedJobs'),
         AsyncStorage.getItem('theme'),
         AsyncStorage.getItem('onboardingComplete'),
       ]);
@@ -212,13 +215,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           console.log('✅ User authenticated with valid token');
           console.log('🔐 Authentication state:', { isAuthenticated: true, userId: appUserProfile.id });
           
-          // Load user-specific data
-          if (applications) {
-            dispatch({ type: 'SET_APPLICATIONS', payload: JSON.parse(applications) });
-          }
-          if (notifications) {
-            dispatch({ type: 'SET_NOTIFICATIONS', payload: JSON.parse(notifications) });
-          }
+          // Load user-specific data from APIs
+          loadUserData();
         } catch (tokenError) {
           console.error('❌ Token validation failed:', tokenError);
           // Token is invalid, clear auth data
@@ -246,6 +244,45 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       dispatch({ type: 'SET_JOBS', payload: [] });
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  };
+
+  const loadUserData = async () => {
+    try {
+      console.log('🔄 Loading user-specific data from APIs...');
+      
+      // Load data from APIs in parallel
+      const [applications, notifications, savedJobs] = await Promise.allSettled([
+        applicationsService.getApplications(),
+        notificationsService.getNotifications(),
+        savedJobsService.getSavedJobIds(),
+      ]);
+
+      // Handle applications
+      if (applications.status === 'fulfilled') {
+        dispatch({ type: 'SET_APPLICATIONS', payload: applications.value });
+        console.log('✅ Loaded applications:', applications.value.length);
+      } else {
+        console.error('❌ Failed to load applications:', applications.reason);
+      }
+
+      // Handle notifications
+      if (notifications.status === 'fulfilled') {
+        dispatch({ type: 'SET_NOTIFICATIONS', payload: notifications.value });
+        console.log('✅ Loaded notifications:', notifications.value.length);
+      } else {
+        console.error('❌ Failed to load notifications:', notifications.reason);
+      }
+
+      // Handle saved jobs
+      if (savedJobs.status === 'fulfilled') {
+        dispatch({ type: 'SET_SAVED_JOBS', payload: savedJobs.value });
+        console.log('✅ Loaded saved jobs:', savedJobs.value.length);
+      } else {
+        console.error('❌ Failed to load saved jobs:', savedJobs.reason);
+      }
+    } catch (error) {
+      console.error('❌ Error loading user data:', error);
     }
   };
 
@@ -374,45 +411,136 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const applyToJob = (jobId: string) => {
-    const job = state.jobs.find(j => j.id === jobId);
-    if (!job) return;
+  const applyToJob = async (jobId: string, coverLetter?: string, resumeUrl?: string) => {
+    try {
+      const response = await applicationsService.applyToJob({
+        jobId,
+        coverLetter,
+        resumeUrl,
+      });
 
-    const newApplication: Application = {
-      id: Date.now().toString(),
-      jobId,
-      jobTitle: job.title,
-      company: job.company,
-      appliedDate: new Date().toISOString().split('T')[0],
-      status: 'Applied',
-      statusHistory: [{
-        status: 'Applied',
-        date: new Date().toISOString().split('T')[0],
-        description: 'Application submitted successfully'
-      }],
-      notes: '',
-      interviewDate: null,
-      salary: job.salary,
-      location: job.location,
-    };
+      // Convert API response to app format
+      const newApplication: Application = {
+        id: response.id,
+        jobId: response.jobId,
+        jobTitle: state.jobs.find(j => j.id === jobId)?.title || 'Unknown Job',
+        company: state.jobs.find(j => j.id === jobId)?.company || 'Unknown Company',
+        appliedDate: response.appliedAt.split('T')[0],
+        status: response.status === 'pending' ? 'Applied' : response.status,
+        statusHistory: [{
+          status: response.status === 'pending' ? 'Applied' : response.status,
+          date: response.appliedAt.split('T')[0],
+          description: 'Application submitted successfully'
+        }],
+        notes: '',
+        interviewDate: null,
+        salary: state.jobs.find(j => j.id === jobId)?.salary || '',
+        location: state.jobs.find(j => j.id === jobId)?.location || '',
+      };
 
-    dispatch({ type: 'ADD_APPLICATION', payload: newApplication });
+      dispatch({ type: 'ADD_APPLICATION', payload: newApplication });
+      dispatch({ type: 'ADD_APPLIED_JOB', payload: jobId });
+    } catch (error) {
+      console.error('❌ Failed to apply to job:', error);
+      throw error;
+    }
   };
 
-  const saveJob = (jobId: string) => {
-    dispatch({ type: 'SAVE_JOB', payload: jobId });
+  const saveJob = async (jobId: string) => {
+    try {
+      await savedJobsService.saveJob(jobId);
+      dispatch({ type: 'SAVE_JOB', payload: jobId });
+    } catch (error) {
+      console.error('❌ Failed to save job:', error);
+      throw error;
+    }
   };
 
-  const unsaveJob = (jobId: string) => {
-    dispatch({ type: 'UNSAVE_JOB', payload: jobId });
+  const unsaveJob = async (jobId: string) => {
+    try {
+      await savedJobsService.unsaveJob(jobId);
+      dispatch({ type: 'UNSAVE_JOB', payload: jobId });
+    } catch (error) {
+      console.error('❌ Failed to unsave job:', error);
+      throw error;
+    }
   };
 
-  const markNotificationAsRead = (notificationId: string) => {
-    dispatch({ type: 'MARK_NOTIFICATION_READ', payload: notificationId });
+  const markNotificationAsRead = async (notificationId: string) => {
+    try {
+      await notificationsService.markAsRead(notificationId);
+      dispatch({ type: 'MARK_NOTIFICATION_READ', payload: notificationId });
+    } catch (error) {
+      console.error('❌ Failed to mark notification as read:', error);
+      // Still update local state even if API fails
+      dispatch({ type: 'MARK_NOTIFICATION_READ', payload: notificationId });
+    }
   };
 
-  const updateProfile = (profile: Partial<UserProfile>) => {
-    dispatch({ type: 'UPDATE_PROFILE', payload: profile });
+  const updateProfile = async (profile: Partial<UserProfile>) => {
+    try {
+      // Update profile via API
+      const updatedProfile = await profileService.updateProfile({
+        name: profile.name,
+        phone: profile.phone,
+        skills: profile.skills,
+      });
+      
+      // Update local state
+      dispatch({ type: 'UPDATE_PROFILE', payload: profile });
+    } catch (error) {
+      console.error('❌ Failed to update profile:', error);
+      // Still update local state even if API fails
+      dispatch({ type: 'UPDATE_PROFILE', payload: profile });
+    }
+  };
+
+  // New methods for API integration
+  const refreshApplications = async () => {
+    try {
+      const applications = await applicationsService.getApplications();
+      dispatch({ type: 'SET_APPLICATIONS', payload: applications });
+    } catch (error) {
+      console.error('❌ Failed to refresh applications:', error);
+    }
+  };
+
+  const refreshNotifications = async () => {
+    try {
+      const notifications = await notificationsService.getNotifications();
+      dispatch({ type: 'SET_NOTIFICATIONS', payload: notifications });
+    } catch (error) {
+      console.error('❌ Failed to refresh notifications:', error);
+    }
+  };
+
+  const refreshSavedJobs = async () => {
+    try {
+      const savedJobIds = await savedJobsService.getSavedJobIds();
+      dispatch({ type: 'SET_SAVED_JOBS', payload: savedJobIds });
+    } catch (error) {
+      console.error('❌ Failed to refresh saved jobs:', error);
+    }
+  };
+
+  const searchJobs = async (query: string, filters?: any) => {
+    try {
+      const results = await searchService.searchJobs({ q: query, ...filters });
+      return results.jobs;
+    } catch (error) {
+      console.error('❌ Failed to search jobs:', error);
+      return [];
+    }
+  };
+
+  const getRecommendedJobs = async () => {
+    try {
+      const jobs = await searchService.getRecommendedJobs();
+      return jobs;
+    } catch (error) {
+      console.error('❌ Failed to get recommended jobs:', error);
+      return [];
+    }
   };
 
   const toggleTheme = () => {
@@ -441,6 +569,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     toggleTheme,
     navigateToScreen,
     setOnboardingComplete,
+    refreshApplications,
+    refreshNotifications,
+    refreshSavedJobs,
+    searchJobs,
+    getRecommendedJobs,
   };
 
   return (

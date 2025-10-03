@@ -1,11 +1,11 @@
-import profileData from '../data/profile.json';
 import { apiService } from '../services/api';
+import { searchService } from '../services/searchService';
 import { transformApiJobsToJobs, transformApiUserToUser } from './apiDataTransformer';
 import { testApiConnection } from './apiTest';
 
 export const loadInitialData = () => {
   return {
-    user: profileData,
+    user: null,
     jobs: [],
     applications: [],
     notifications: [],
@@ -49,8 +49,7 @@ export const loadDataFromAPI = async () => {
     
     return {
       jobs,
-      // Keep other data as fallback for now
-      user: profileData,
+      user: null,
       applications: [],
       notifications: [],
       savedJobs: [],
@@ -63,7 +62,7 @@ export const loadDataFromAPI = async () => {
     // No fallback - return empty jobs array if API fails
     return {
       jobs: [],
-      user: profileData,
+      user: null,
       applications: [],
       notifications: [],
       savedJobs: [],
