@@ -13,8 +13,10 @@ async function start() {
     if (process.env.NODE_ENV !== 'production') {
       await runSeed();
     }
-    app.listen(PORT, () => {
-      console.log(`API listening on :${PORT}`);
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`API listening on 0.0.0.0:${PORT}`);
+      console.log(`Local access: http://localhost:${PORT}`);
+      console.log(`Network access: http://10.115.43.116:${PORT}`);
     });
   } catch (err) {
     console.error('Failed to start server', err);

@@ -29,37 +29,51 @@ const HomeScreen: React.FC = () => {
 
   useEffect(() => {
     // Load initial data
-    if (state.jobs.length === 0) {
-      // Try to load from API first
-      loadJobsFromAPI();
-    }
-    if (state.notifications.length === 0) {
-      const transformedNotifications = notificationsData.map(notification => ({
-        ...notification,
-        timestamp: notification.createdAt
-      }));
-      dispatch({ type: 'SET_NOTIFICATIONS', payload: transformedNotifications as any });
-    }
-    
-    // Load data
-    const loadData = async () => {
+    const loadInitialData = async () => {
+      console.log('🏠 HomeScreen: Starting initial data load...');
+      console.log('🏠 Current jobs in state:', state.jobs.length);
       setIsLoadingJobs(true);
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Load jobs if not already loaded
+      if (state.jobs.length === 0) {
+        console.log('🔄 No jobs in state, loading from API...');
+        await loadJobsFromAPI();
+      } else {
+        console.log('✅ Jobs already loaded:', state.jobs.length);
+      }
+      
+      // Load notifications if not already loaded
+      if (state.notifications.length === 0) {
+        const transformedNotifications = notificationsData.map(notification => ({
+          ...notification,
+          timestamp: notification.createdAt
+        }));
+        dispatch({ type: 'SET_NOTIFICATIONS', payload: transformedNotifications as any });
+      }
+      
+      // Add a small delay to show loading state
+      await new Promise(resolve => setTimeout(resolve, 500));
       setIsLoadingJobs(false);
+      console.log('🏠 HomeScreen: Initial data load complete. Jobs count:', state.jobs.length);
     };
     
-    loadData();
+    loadInitialData();
   }, []);
 
   const loadJobsFromAPI = async () => {
     try {
+      console.log('🔄 Loading jobs from API...');
       const { loadDataFromAPI } = await import('../utils/dataLoader');
       const apiData = await loadDataFromAPI();
+      console.log('✅ Jobs loaded from API:', apiData.jobs.length);
       dispatch({ type: 'SET_JOBS', payload: apiData.jobs });
     } catch (error) {
-      console.error('Failed to load jobs from API:', error);
-      // No fallback - only use API data
-      dispatch({ type: 'SET_JOBS', payload: [] });
+      console.error('❌ Failed to load jobs from API:', error);
+      // Try to load from AppContext's background loading
+      if (state.jobs.length === 0) {
+        console.log('🔄 No jobs available, showing empty state');
+        dispatch({ type: 'SET_JOBS', payload: [] });
+      }
     }
   };
 
@@ -96,7 +110,9 @@ const HomeScreen: React.FC = () => {
   };
 
   const getRecentJobs = () => {
-    return state.jobs.slice(0, 3);
+    const recentJobs = state.jobs.slice(0, 3);
+    console.log('🏠 getRecentJobs called. Total jobs:', state.jobs.length, 'Recent jobs:', recentJobs.length);
+    return recentJobs;
   };
 
   const getJobMatchPercentage = (job: any) => {
@@ -385,15 +401,43 @@ const HomeScreen: React.FC = () => {
 
             {/* Job Cards */}
             <View style={styles.jobCardsContainer}>
-              {isLoadingJobs ? (
-                <View style={styles.loadingJobsContainer}>
-                  {[1, 2, 3].map((index) => (
-                    <JobCardSkeleton key={index} />
-                  ))}
-                </View>
-              ) : (
-                <View style={styles.jobCardsList}>
-                  {getRecentJobs().map((job) => job ? (
+              {(() => {
+                const recentJobs = getRecentJobs();
+                console.log('🏠 Rendering job cards. isLoadingJobs:', isLoadingJobs, 'recentJobs.length:', recentJobs.length);
+                
+                if (isLoadingJobs) {
+                  return (
+                    <View style={styles.loadingJobsContainer}>
+                      {[1, 2, 3].map((index) => (
+                        <JobCardSkeleton key={index} />
+                      ))}
+                    </View>
+                  );
+                } else if (recentJobs.length === 0) {
+                  return (
+                    <Card style={styles.emptyStateCard}>
+                      <Card.Content style={styles.emptyStateContent}>
+                        <MaterialCommunityIcons name="briefcase-outline" size={48} color="#CCCCCC" />
+                        <Text variant="titleMedium" style={styles.emptyStateTitle}>
+                          No Jobs Available
+                        </Text>
+                        <Text variant="bodyMedium" style={styles.emptyStateText}>
+                          Check back later for new job opportunities
+                        </Text>
+                        <Button 
+                          mode="outlined" 
+                          onPress={() => (navigation as any).navigate('Jobs')}
+                          style={styles.emptyStateButton}
+                        >
+                          Browse All Jobs
+                        </Button>
+                      </Card.Content>
+                    </Card>
+                  );
+                } else {
+                  return (
+                    <View style={styles.jobCardsList}>
+                      {recentJobs.map((job) => job ? (
                     <Card 
                       key={job.id} 
                       style={styles.jobCard}
@@ -486,9 +530,11 @@ const HomeScreen: React.FC = () => {
                         </View>
                       </Card.Content>
                     </Card>
-                  ) : null)}
-                </View>
-              )}
+                      ) : null)}
+                    </View>
+                  );
+                }
+              })()}
             </View>
           </View>
 
@@ -898,6 +944,29 @@ const styles = StyleSheet.create({
   insightText: {
     color: '#666666',
     fontSize: 14,
+  },
+  emptyStateCard: {
+    borderRadius: 12,
+    elevation: 1,
+    marginVertical: 8,
+  },
+  emptyStateContent: {
+    padding: 32,
+    alignItems: 'center',
+  },
+  emptyStateTitle: {
+    color: '#666666',
+    marginTop: 16,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  emptyStateText: {
+    color: '#999999',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  emptyStateButton: {
+    borderRadius: 8,
   },
 });
 

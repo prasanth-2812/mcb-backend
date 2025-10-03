@@ -315,10 +315,10 @@ const SignupScreen: React.FC = () => {
             style={[
               styles.signupButton,
               { backgroundColor: '#3B82F6' },
-              (!isFormValid() || isLoading) && styles.signupButtonDisabled
+              isLoading && styles.signupButtonDisabled
             ]}
             onPress={handleSignup}
-            disabled={!isFormValid() || isLoading}
+            disabled={isLoading}
           >
             <Text style={styles.signupButtonText}>
               {isLoading ? 'Creating Account...' : 'Create Account'}

@@ -8,6 +8,8 @@ export interface UserAttributes {
   password: string;
   phone?: string | null;
   role: 'employee' | 'employer';
+  resetPasswordToken?: string | null;
+  resetPasswordExpires?: Date | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -21,6 +23,8 @@ export class User extends Model<UserAttributes, UserCreation> implements UserAtt
   declare password: string;
   declare phone: string | null;
   declare role: 'employee' | 'employer';
+  declare resetPasswordToken: string | null;
+  declare resetPasswordExpires: Date | null;
   declare readonly createdAt: Date;
   declare readonly updatedAt: Date;
 }
@@ -32,6 +36,8 @@ User.init({
   password: { type: DataTypes.STRING, allowNull: false },
   phone: { type: DataTypes.STRING, allowNull: true },
   role: { type: DataTypes.STRING, allowNull: false, defaultValue: 'employee' },
+  resetPasswordToken: { type: DataTypes.STRING, allowNull: true },
+  resetPasswordExpires: { type: DataTypes.DATE, allowNull: true },
 }, {
   sequelize,
   tableName: 'users',

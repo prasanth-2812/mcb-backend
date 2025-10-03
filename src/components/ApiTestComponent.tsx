@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, Alert } from 'react-native';
+import { Button, Card, Text, useTheme } from 'react-native-paper';
+import { authService } from '../services/authService';
 import { apiService } from '../services/api';
 
 const ApiTestComponent: React.FC = () => {
-  const [testResults, setTestResults] = useState<string[]>([]);
+  const theme = useTheme();
   const [isLoading, setIsLoading] = useState(false);
+  const [testResults, setTestResults] = useState<string[]>([]);
 
-  const addLog = (message: string) => {
-    console.log(message);
+  const addResult = (message: string) => {
     setTestResults(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`]);
   };
 
@@ -15,95 +17,102 @@ const ApiTestComponent: React.FC = () => {
     setIsLoading(true);
     setTestResults([]);
     
-    addLog('🧪 Starting API connection test...');
-    
     try {
-      // Test 1: Health Check
-      addLog('🔍 Testing health endpoint...');
-      const health = await apiService.healthCheck();
-      addLog(`✅ Health check passed: ${JSON.stringify(health)}`);
+      addResult('🔄 Testing API health check...');
+      const healthResult = await authService.healthCheck();
+      addResult(`✅ Health check passed: ${JSON.stringify(healthResult)}`);
       
-      // Test 2: Jobs endpoint
-      addLog('📋 Testing jobs endpoint...');
+      addResult('🔄 Testing jobs API...');
       const jobs = await apiService.getJobs();
-      addLog(`✅ Jobs endpoint passed: ${jobs.length} jobs received`);
+      addResult(`✅ Jobs API passed: Found ${jobs.length} jobs`);
       
-      // Test 3: Sample job data
-      if (jobs.length > 0) {
-        const sampleJob = jobs[0];
-        addLog(`📊 Sample job: ${sampleJob.title} at ${sampleJob.company}`);
+      addResult('🔄 Testing registration endpoint...');
+      // Test registration with dummy data
+      try {
+        await authService.register({
+          email: 'test@example.com',
+          password: 'testpassword123',
+          name: 'Test User',
+          role: 'employee'
+        });
+        addResult('✅ Registration endpoint accessible');
+      } catch (regError) {
+        if (regError.message.includes('User already exists')) {
+          addResult('✅ Registration endpoint accessible (user exists)');
+        } else {
+          addResult(`⚠️ Registration endpoint error: ${regError.message}`);
+        }
       }
       
-      addLog('🎉 All API tests passed successfully!');
+      addResult('🎉 All API tests completed successfully!');
       
     } catch (error) {
-      addLog(`❌ API test failed: ${error.message}`);
-      addLog(`🔍 Error details: ${JSON.stringify(error)}`);
+      addResult(`❌ API test failed: ${error.message}`);
+      Alert.alert('API Test Failed', error.message);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>API Connection Test</Text>
-      
-      <TouchableOpacity 
-        style={[styles.button, isLoading && styles.buttonDisabled]} 
-        onPress={testApiConnection}
-        disabled={isLoading}
-      >
-        <Text style={styles.buttonText}>
-          {isLoading ? 'Testing...' : 'Test API Connection'}
+    <Card style={styles.card}>
+      <Card.Content>
+        <Text variant="titleMedium" style={styles.title}>
+          API Connection Test
         </Text>
-      </TouchableOpacity>
-      
-      <ScrollView style={styles.logContainer}>
-        {testResults.map((result, index) => (
-          <Text key={index} style={styles.logText}>{result}</Text>
-        ))}
-      </ScrollView>
-    </View>
+        
+        <Button
+          mode="contained"
+          onPress={testApiConnection}
+          loading={isLoading}
+          disabled={isLoading}
+          style={styles.button}
+        >
+          {isLoading ? 'Testing...' : 'Test API Connection'}
+        </Button>
+        
+        {testResults.length > 0 && (
+          <View style={styles.results}>
+            <Text variant="titleSmall" style={styles.resultsTitle}>
+              Test Results:
+            </Text>
+            {testResults.map((result, index) => (
+              <Text key={index} variant="bodySmall" style={styles.resultText}>
+                {result}
+              </Text>
+            ))}
+          </View>
+        )}
+      </Card.Content>
+    </Card>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: '#f5f5f5',
+  card: {
+    margin: 16,
+    elevation: 2,
   },
   title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 20,
+    marginBottom: 16,
     textAlign: 'center',
   },
   button: {
-    backgroundColor: '#007AFF',
-    padding: 15,
+    marginBottom: 16,
+  },
+  results: {
+    backgroundColor: '#f5f5f5',
+    padding: 12,
     borderRadius: 8,
-    marginBottom: 20,
+    maxHeight: 200,
   },
-  buttonDisabled: {
-    backgroundColor: '#ccc',
-  },
-  buttonText: {
-    color: 'white',
-    textAlign: 'center',
+  resultsTitle: {
     fontWeight: 'bold',
+    marginBottom: 8,
   },
-  logContainer: {
-    flex: 1,
-    backgroundColor: '#000',
-    borderRadius: 8,
-    padding: 10,
-  },
-  logText: {
-    color: '#00ff00',
+  resultText: {
+    marginBottom: 4,
     fontFamily: 'monospace',
-    fontSize: 12,
-    marginBottom: 2,
   },
 });
 

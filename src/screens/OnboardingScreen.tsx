@@ -3,6 +3,7 @@ import { View, StyleSheet, Dimensions, Image } from 'react-native';
 import { Text, Button, useTheme } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
@@ -66,7 +67,7 @@ const onboardingSlides: OnboardingSlide[] = [
 
 const OnboardingScreen: React.FC = () => {
   const theme = useTheme();
-  const { state, login, navigateToScreen } = useApp();
+  const { state, login, navigateToScreen, setOnboardingComplete } = useApp();
   const isDark = state.theme === 'dark';
   
   const [currentPage, setCurrentPage] = useState(0);
@@ -89,12 +90,37 @@ const OnboardingScreen: React.FC = () => {
     }
   };
 
-  const handleSkip = () => {
-    navigateToScreen('login');
+  const handleSkip = async () => {
+    try {
+      // Mark onboarding as complete in both localStorage and state
+      await AsyncStorage.setItem('onboardingComplete', 'true');
+      setOnboardingComplete(true);
+      console.log('✅ Onboarding skipped, localStorage and state set');
+      
+      // Navigate to login screen
+      navigateToScreen('login');
+    } catch (error) {
+      console.error('❌ Failed to save onboarding completion:', error);
+      setOnboardingComplete(true);
+      navigateToScreen('login');
+    }
   };
 
-  const handleGetStarted = () => {
-    navigateToScreen('login');
+  const handleGetStarted = async () => {
+    try {
+      // Mark onboarding as complete in both localStorage and state
+      await AsyncStorage.setItem('onboardingComplete', 'true');
+      setOnboardingComplete(true);
+      console.log('✅ Onboarding completed, localStorage and state set');
+      
+      // Navigate to login screen (which will then show jobs in browse mode)
+      navigateToScreen('login');
+    } catch (error) {
+      console.error('❌ Failed to save onboarding completion:', error);
+      setOnboardingComplete(true);
+      // Still navigate even if storage fails
+      navigateToScreen('login');
+    }
   };
 
   const renderSlide = (slide: OnboardingSlide, index: number) => {

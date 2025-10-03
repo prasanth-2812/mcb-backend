@@ -1,5 +1,5 @@
-// Use your computer's IP address instead of localhost for React Native
-const API_BASE_URL = 'http://10.184.72.116:4000/api';
+// Use network IP for Expo development (works with physical devices and emulators)
+const API_BASE_URL = 'http://10.115.43.116:4000/api';
 // Fallback to localhost for web development
 const API_BASE_URL_FALLBACK = 'http://localhost:4000/api';
 
@@ -38,7 +38,7 @@ export interface ApiCandidate {
 class ApiService {
   private async getAuthToken(): Promise<string | null> {
     try {
-      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+      const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
       return await AsyncStorage.getItem('authToken');
     } catch (error) {
       console.error('Error getting auth token:', error);
@@ -47,7 +47,7 @@ class ApiService {
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    // Try primary URL first, then fallback
+    // Try primary URL first, then fallback with shorter timeout
     const urls = [API_BASE_URL, API_BASE_URL_FALLBACK];
     
     for (let i = 0; i < urls.length; i++) {
@@ -70,11 +70,23 @@ class ApiService {
 
       try {
         console.log(`📡 Attempting connection to: ${url}`);
-        const response = await fetch(url, config);
+        
+        // Add timeout to prevent long waits
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout for network requests
+        
+        const response = await fetch(url, {
+          ...config,
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
         
         console.log(`📊 Response status: ${response.status} ${response.statusText}`);
         
         if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`❌ HTTP Error Response:`, errorText);
           throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
         }
         
@@ -188,7 +200,7 @@ class ApiService {
   // Health check
   async healthCheck(): Promise<{ status: string }> {
     // Health endpoint is at root level, not under /api
-    const urls = ['http://10.184.72.116:4000/health', 'http://localhost:4000/health'];
+    const urls = ['http://10.115.43.116:4000/health', 'http://localhost:4000/health'];
     
     for (let i = 0; i < urls.length; i++) {
       const url = urls[i];
@@ -213,7 +225,8 @@ class ApiService {
         
         // If this is the last URL, throw the error
         if (i === urls.length - 1) {
-          throw new Error(`All health check endpoints failed. Last error: ${error.message}`);
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          throw new Error(`All health check endpoints failed. Last error: ${errorMessage}`);
         }
         
         // Otherwise, try the next URL

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, StatusBar, Alert } from 'react-native';
 import { Text, Button, Card, useTheme, TextInput, IconButton } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -7,98 +7,105 @@ import { useApp } from '../context/AppContext';
 import { Colors } from '../constants/colors';
 import { Sizes } from '../constants/sizes';
 
-const ForgotPasswordScreen: React.FC = () => {
+interface ResetPasswordScreenProps {
+  route?: {
+    params?: {
+      token?: string;
+    };
+  };
+}
+
+const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({ route }) => {
   const theme = useTheme();
   const { state, navigateToScreen } = useApp();
   const isDark = state.theme === 'dark';
   
-  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [token, setToken] = useState('');
+
+  useEffect(() => {
+    // Get token from route params or URL
+    const resetToken = route?.params?.token || '';
+    setToken(resetToken);
+    
+    if (!resetToken) {
+      Alert.alert('Error', 'Invalid reset link. Please request a new password reset.');
+      navigateToScreen('forgot-password');
+    }
+  }, [route, navigateToScreen]);
 
   const handleBackToLogin = () => {
-    // Reset currentScreen to show the tab navigator again
     navigateToScreen('login');
   };
 
-  const handleSendResetEmail = async () => {
-    if (!email.trim()) {
-      Alert.alert('Error', 'Please enter your email address');
+  const handleResetPassword = async () => {
+    if (!password.trim()) {
+      Alert.alert('Error', 'Please enter a new password');
       return;
     }
 
-    if (!isValidEmail(email)) {
-      Alert.alert('Error', 'Please enter a valid email address');
+    if (password.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters long');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert('Error', 'Passwords do not match');
+      return;
+    }
+
+    if (!token) {
+      Alert.alert('Error', 'Invalid reset token. Please request a new password reset.');
       return;
     }
 
     setIsLoading(true);
     
     try {
-      console.log('🔄 Sending password reset request for:', email);
+      console.log('🔄 Resetting password with token:', token.substring(0, 10) + '...');
       
-      const response = await fetch('http://10.115.43.116:4000/api/auth/forgot-password', {
+      const response = await fetch('http://10.115.43.116:4000/api/auth/reset-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ 
+          token,
+          password 
+        }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        console.log('✅ Password reset email sent successfully');
-        setEmailSent(true);
+        console.log('✅ Password reset successfully');
+        setIsSuccess(true);
       } else {
         console.error('❌ Password reset failed:', data.message);
-        Alert.alert('Error', data.message || 'Failed to send reset email. Please try again.');
+        Alert.alert('Error', data.message || 'Failed to reset password. Please try again.');
       }
     } catch (error) {
       console.error('❌ Password reset error:', error);
-      Alert.alert('Error', 'Failed to send reset email. Please check your internet connection and try again.');
+      Alert.alert('Error', 'Failed to reset password. Please check your internet connection and try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleResendEmail = async () => {
-    setIsLoading(true);
-    
-    try {
-      console.log('🔄 Resending password reset request for:', email);
-      
-      const response = await fetch('http://10.115.43.116:4000/api/auth/forgot-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        console.log('✅ Password reset email resent successfully');
-        Alert.alert('Success', 'Reset email sent again!');
-      } else {
-        console.error('❌ Password reset resend failed:', data.message);
-        Alert.alert('Error', data.message || 'Failed to resend email. Please try again.');
-      }
-    } catch (error) {
-      console.error('❌ Password reset resend error:', error);
-      Alert.alert('Error', 'Failed to resend email. Please check your internet connection and try again.');
-    } finally {
-      setIsLoading(false);
-    }
+  const isValidPassword = (pwd: string) => {
+    return pwd.length >= 6;
   };
 
-  const isValidEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+  const passwordsMatch = () => {
+    return password === confirmPassword && password.length > 0;
   };
 
-  if (emailSent) {
+  if (isSuccess) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: isDark ? Colors.dark : Colors.white }]}>
         <StatusBar 
@@ -116,7 +123,7 @@ const ForgotPasswordScreen: React.FC = () => {
             style={styles.backButton}
           />
           <Text variant="headlineSmall" style={[styles.headerTitle, { color: isDark ? Colors.white : Colors.textPrimary }]}>
-            Check Your Email
+            Password Reset
           </Text>
           <View style={styles.headerRight} />
         </View>
@@ -130,61 +137,34 @@ const ForgotPasswordScreen: React.FC = () => {
             <Card.Content style={styles.cardContent}>
               <View style={styles.successIconContainer}>
                 <MaterialCommunityIcons 
-                  name="email-check-outline" 
+                  name="check-circle-outline" 
                   size={80} 
                   color="#4CAF50" 
                 />
               </View>
               
               <Text variant="headlineSmall" style={[styles.successTitle, { color: isDark ? Colors.white : Colors.textPrimary }]}>
-                Check Your Email
+                Password Reset Successful!
               </Text>
               
               <Text variant="bodyLarge" style={[styles.successMessage, { color: isDark ? Colors.textSecondary : Colors.textSecondary }]}>
-                We've sent a password reset link to:
-              </Text>
-              
-              <Text variant="bodyMedium" style={[styles.emailText, { color: isDark ? Colors.white : Colors.primary }]}>
-                {email}
-              </Text>
-              
-              <Text variant="bodyMedium" style={[styles.instructionsText, { color: isDark ? Colors.textSecondary : Colors.textSecondary }]}>
-                Please check your email and click the link to reset your password. The link will expire in 15 minutes.
+                Your password has been successfully updated. You can now log in with your new password.
               </Text>
             </Card.Content>
           </Card>
 
-          {/* Action Buttons */}
+          {/* Action Button */}
           <View style={styles.buttonContainer}>
-            <Button
-              mode="outlined"
-              onPress={handleResendEmail}
-              loading={isLoading}
-              disabled={isLoading}
-              style={styles.resendButton}
-              textColor={isDark ? Colors.white : Colors.primary}
-              icon={() => <MaterialCommunityIcons name="email-send-outline" size={20} color={isDark ? Colors.white : Colors.primary} />}
-            >
-              Resend Email
-            </Button>
-            
             <Button
               mode="contained"
               onPress={handleBackToLogin}
-              style={styles.backToLoginButton}
+              style={styles.loginButton}
               buttonColor={isDark ? Colors.primary : Colors.primary}
               textColor="#FFFFFF"
-              icon={() => <MaterialCommunityIcons name="arrow-left" size={20} color="#FFFFFF" />}
+              icon={() => <MaterialCommunityIcons name="login" size={20} color="#FFFFFF" />}
             >
-              Back to Login
+              Go to Login
             </Button>
-          </View>
-
-          {/* Help Text */}
-          <View style={styles.helpContainer}>
-            <Text variant="bodySmall" style={[styles.helpText, { color: isDark ? Colors.textSecondary : Colors.textSecondary }]}>
-              Didn't receive the email? Check your spam folder or try again.
-            </Text>
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -208,7 +188,7 @@ const ForgotPasswordScreen: React.FC = () => {
           style={styles.backButton}
         />
         <Text variant="headlineSmall" style={[styles.headerTitle, { color: isDark ? Colors.white : Colors.textPrimary }]}>
-          Forgot Password
+          Reset Password
         </Text>
         <View style={styles.headerRight} />
       </View>
@@ -229,32 +209,67 @@ const ForgotPasswordScreen: React.FC = () => {
             </View>
             
             <Text variant="headlineSmall" style={[styles.title, { color: isDark ? Colors.white : Colors.textPrimary }]}>
-              Reset Your Password
+              Set New Password
             </Text>
             
             <Text variant="bodyLarge" style={[styles.subtitle, { color: isDark ? Colors.textSecondary : Colors.textSecondary }]}>
-              Don't worry! Enter your email address and we'll send you a link to reset your password.
+              Please enter your new password below. Make sure it's secure and easy to remember.
             </Text>
 
-            {/* Email Input */}
+            {/* Password Input */}
             <View style={styles.inputContainer}>
               <TextInput
-                label="Email Address"
-                value={email}
-                onChangeText={setEmail}
+                label="New Password"
+                value={password}
+                onChangeText={setPassword}
                 mode="outlined"
-                keyboardType="email-address"
+                secureTextEntry={!showPassword}
                 autoCapitalize="none"
                 autoCorrect={false}
                 style={styles.input}
-                left={<TextInput.Icon icon="email-outline" />}
-                placeholder="Enter your email address"
-                error={email.length > 0 && !isValidEmail(email)}
+                left={<TextInput.Icon icon="lock-outline" />}
+                right={
+                  <TextInput.Icon 
+                    icon={showPassword ? "eye-off" : "eye"} 
+                    onPress={() => setShowPassword(!showPassword)}
+                  />
+                }
+                placeholder="Enter your new password"
+                error={password.length > 0 && !isValidPassword(password)}
                 disabled={isLoading}
               />
-              {email.length > 0 && !isValidEmail(email) && (
+              {password.length > 0 && !isValidPassword(password) && (
                 <Text variant="bodySmall" style={styles.errorText}>
-                  Please enter a valid email address
+                  Password must be at least 6 characters long
+                </Text>
+              )}
+            </View>
+
+            {/* Confirm Password Input */}
+            <View style={styles.inputContainer}>
+              <TextInput
+                label="Confirm New Password"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                mode="outlined"
+                secureTextEntry={!showConfirmPassword}
+                autoCapitalize="none"
+                autoCorrect={false}
+                style={styles.input}
+                left={<TextInput.Icon icon="lock-check-outline" />}
+                right={
+                  <TextInput.Icon 
+                    icon={showConfirmPassword ? "eye-off" : "eye"} 
+                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                  />
+                }
+                placeholder="Confirm your new password"
+                error={confirmPassword.length > 0 && !passwordsMatch()}
+                disabled={isLoading}
+              />
+              {confirmPassword.length > 0 && !passwordsMatch() && (
+                <Text variant="bodySmall" style={styles.errorText}>
+                  Passwords do not match
                 </Text>
               )}
             </View>
@@ -265,15 +280,15 @@ const ForgotPasswordScreen: React.FC = () => {
         <View style={styles.buttonContainer}>
           <Button
             mode="contained"
-            onPress={handleSendResetEmail}
+            onPress={handleResetPassword}
             loading={isLoading}
-            disabled={isLoading || !email.trim() || !isValidEmail(email)}
-            style={styles.sendButton}
+            disabled={isLoading || !isValidPassword(password) || !passwordsMatch()}
+            style={styles.resetButton}
             buttonColor={isDark ? Colors.primary : Colors.primary}
             textColor="#FFFFFF"
-            icon={() => <MaterialCommunityIcons name="send" size={20} color="#FFFFFF" />}
+            icon={() => <MaterialCommunityIcons name="check" size={20} color="#FFFFFF" />}
           >
-            {isLoading ? 'Sending...' : 'Send Reset Link'}
+            {isLoading ? 'Resetting...' : 'Reset Password'}
           </Button>
           
           <Button
@@ -291,13 +306,13 @@ const ForgotPasswordScreen: React.FC = () => {
         {/* Help Text */}
         <View style={styles.helpContainer}>
           <Text variant="bodySmall" style={[styles.helpText, { color: isDark ? Colors.textSecondary : Colors.textSecondary }]}>
-            Remember your password? 
-            <Text 
-              style={[styles.linkText, { color: isDark ? Colors.white : Colors.primary }]}
-              onPress={handleBackToLogin}
-            >
-              {' '}Sign in here
-            </Text>
+            Password requirements:
+          </Text>
+          <Text variant="bodySmall" style={[styles.helpText, { color: isDark ? Colors.textSecondary : Colors.textSecondary }]}>
+            • At least 6 characters long
+          </Text>
+          <Text variant="bodySmall" style={[styles.helpText, { color: isDark ? Colors.textSecondary : Colors.textSecondary }]}>
+            • Use a combination of letters and numbers for better security
           </Text>
         </View>
       </ScrollView>
@@ -374,21 +389,11 @@ const styles = StyleSheet.create({
   },
   successMessage: {
     textAlign: 'center',
-    marginBottom: 8,
     lineHeight: 24,
-  },
-  emailText: {
-    fontWeight: '600',
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  instructionsText: {
-    textAlign: 'center',
-    lineHeight: 22,
   },
   inputContainer: {
     width: '100%',
-    marginBottom: 8,
+    marginBottom: 16,
   },
   input: {
     backgroundColor: 'transparent',
@@ -402,15 +407,13 @@ const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 24,
   },
-  sendButton: {
+  resetButton: {
     borderRadius: 12,
     paddingVertical: 8,
   },
-  resendButton: {
+  loginButton: {
     borderRadius: 12,
     paddingVertical: 8,
-    borderColor: '#1976D2',
-    borderWidth: 1.5,
   },
   cancelButton: {
     borderRadius: 12,
@@ -418,21 +421,14 @@ const styles = StyleSheet.create({
     borderColor: '#E0E0E0',
     borderWidth: 1,
   },
-  backToLoginButton: {
-    borderRadius: 12,
-    paddingVertical: 8,
-  },
   helpContainer: {
-    alignItems: 'center',
+    alignItems: 'flex-start',
     paddingHorizontal: 16,
   },
   helpText: {
-    textAlign: 'center',
     lineHeight: 20,
-  },
-  linkText: {
-    fontWeight: '600',
+    marginBottom: 4,
   },
 });
 
-export default ForgotPasswordScreen;
+export default ResetPasswordScreen;

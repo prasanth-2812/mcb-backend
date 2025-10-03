@@ -1,6 +1,6 @@
 // Auth service for handling authentication API calls
-const API_BASE_URL = 'http://localhost:4000/api';
-const API_BASE_URL_FALLBACK = 'http://10.184.72.116:4000/api';
+const API_BASE_URL = 'http://10.115.43.116:4000/api';
+const API_BASE_URL_FALLBACK = 'http://localhost:4000/api';
 
 export interface LoginRequest {
   email: string;
@@ -53,12 +53,23 @@ class AuthService {
 
       try {
         console.log(`📡 Attempting auth connection to: ${url}`);
-        const response = await fetch(url, config);
+        
+        // Add timeout to prevent long waits
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+        
+        const response = await fetch(url, {
+          ...config,
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
         
         console.log(`📊 Auth response status: ${response.status} ${response.statusText}`);
         
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
+          console.error(`❌ Auth HTTP Error Response:`, errorData);
           throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
         }
         
@@ -90,10 +101,23 @@ class AuthService {
   }
 
   async register(userData: RegisterRequest): Promise<AuthResponse> {
-    return this.request<AuthResponse>('/auth/register', {
-      method: 'POST',
-      body: JSON.stringify(userData),
+    console.log('🔄 Attempting registration with data:', { 
+      email: userData.email, 
+      name: userData.name,
+      role: userData.role 
     });
+    
+    try {
+      const response = await this.request<AuthResponse>('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify(userData),
+      });
+      console.log('✅ Registration successful');
+      return response;
+    } catch (error) {
+      console.error('❌ Registration failed:', error);
+      throw error;
+    }
   }
 
   async getCurrentUser(token: string): Promise<UserProfile> {
@@ -107,7 +131,7 @@ class AuthService {
 
   // Health check for auth service
   async healthCheck(): Promise<{ status: string }> {
-    const urls = ['http://localhost:4000/health', 'http://10.184.72.116:4000/health'];
+    const urls = ['http://10.184.72.116:4000/health', 'http://localhost:4000/health'];
     
     for (let i = 0; i < urls.length; i++) {
       const url = urls[i];
@@ -116,7 +140,16 @@ class AuthService {
       
       try {
         console.log(`📡 Attempting auth health check: ${url}`);
-        const response = await fetch(url);
+        
+        // Add timeout for health check
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+        
+        const response = await fetch(url, {
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
         
         console.log(`📊 Auth health response status: ${response.status} ${response.statusText}`);
         

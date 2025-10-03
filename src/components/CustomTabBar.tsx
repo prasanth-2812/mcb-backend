@@ -33,6 +33,8 @@ const CustomTabBar: React.FC<CustomTabBarProps> = ({ state, descriptors, navigat
         return 'bell-outline';
       case 'Profile':
         return 'account-circle-outline';
+      case 'Login':
+        return 'login';
       default:
         return 'circle-outline';
     }

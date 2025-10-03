@@ -10,6 +10,8 @@ import JobCard from '../components/JobCard';
 import SearchBar from '../components/SearchBar';
 import FilterJobsModal from '../components/FilterJobsModal';
 import { Job, FilterOptions } from '../types';
+import jobApplicationService from '../services/jobApplicationService';
+import toast from '../services/toastService';
 // Removed static jobs data - using API only
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -43,7 +45,75 @@ const JobsScreen: React.FC<JobsScreenProps> = ({ navigation }) => {
       // Try to load from API first
       loadJobsFromAPI();
     }
-  }, []);
+    
+    // Check for pending job application after login
+    checkPendingApplication();
+  }, [state.user]);
+
+  const checkPendingApplication = async () => {
+    if (state.user) {
+      try {
+        const pendingJobId = await jobApplicationService.getPendingApplication();
+        if (pendingJobId) {
+          console.log(`🔄 Found pending job application: ${pendingJobId}`);
+          // Apply to the pending job
+          await handleJobApply(pendingJobId);
+        }
+      } catch (error) {
+        console.error('❌ Failed to process pending application:', error);
+      }
+    }
+  };
+
+  const handleJobApply = async (jobId: string) => {
+    try {
+      console.log(`🔄 Handling job application for job: ${jobId}`);
+      
+      // Check if user is authenticated
+      const isAuthenticated = await jobApplicationService.isAuthenticated();
+      
+      if (!isAuthenticated) {
+        console.log('❌ User not authenticated, saving pending application');
+        // Save pending application and redirect to login
+        await jobApplicationService.savePendingApplication(jobId);
+        toast.authenticationRequired();
+        // Navigate to login screen with next parameter
+        (navigation as any).navigate('Auth', { 
+          screen: 'login', 
+          params: { next: `/jobs/apply?jobId=${jobId}` } 
+        });
+        return;
+      }
+
+      // User is authenticated, apply to job
+      console.log('✅ User authenticated, applying to job');
+      const response = await jobApplicationService.applyToJob(jobId);
+      
+      // Update applied jobs in state
+      dispatch({ type: 'ADD_APPLIED_JOB', payload: jobId });
+      
+      // Show success toast
+      toast.jobAppliedSuccessfully();
+      
+      console.log('✅ Job application successful:', response);
+      
+    } catch (error) {
+      console.error('❌ Job application failed:', error);
+      
+      if (error instanceof Error && error.message === 'AUTHENTICATION_REQUIRED') {
+        // Handle 401 error - save pending application and redirect to login
+        await jobApplicationService.savePendingApplication(jobId);
+        toast.authenticationRequired();
+        (navigation as any).navigate('Auth', { 
+          screen: 'login', 
+          params: { next: `/jobs/apply?jobId=${jobId}` } 
+        });
+      } else {
+        // Show error toast
+        toast.jobApplyFailed();
+      }
+    }
+  };
 
   const loadJobsFromAPI = async () => {
     try {
@@ -130,9 +200,9 @@ const JobsScreen: React.FC<JobsScreenProps> = ({ navigation }) => {
     setSearchQuery('');
   };
 
-  const handleApplyToJob = (job: Job) => {
-    // Navigate to Job Details page
-    (navigation as any).navigate('JobDetails', { jobId: job.id });
+  const handleApplyToJob = async (job: Job) => {
+    console.log(`🔄 Apply button clicked for job: ${job.id}`);
+    await handleJobApply(job.id);
   };
 
   const getJobMatchPercentage = (job: Job) => {

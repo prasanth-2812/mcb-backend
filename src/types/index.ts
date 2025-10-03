@@ -195,6 +195,7 @@ export interface AppState {
   isLoading: boolean;
   theme: 'light' | 'dark';
   currentScreen: 'onboarding' | 'login' | 'signup' | 'forgot-password' | 'main';
+  onboardingComplete: boolean;
 }
 
 export interface AppContextType {
@@ -210,6 +211,7 @@ export interface AppContextType {
   updateProfile: (profile: Partial<UserProfile>) => void;
   toggleTheme: () => void;
   navigateToScreen: (screen: 'onboarding' | 'login' | 'signup' | 'forgot-password' | 'main') => void;
+  setOnboardingComplete: (complete: boolean) => void;
 }
 
 export type AppAction =
@@ -226,7 +228,8 @@ export type AppAction =
   | { type: 'UPDATE_PROFILE'; payload: Partial<UserProfile> }
   | { type: 'TOGGLE_THEME' }
   | { type: 'SET_THEME'; payload: 'light' | 'dark' }
-  | { type: 'SET_CURRENT_SCREEN'; payload: 'onboarding' | 'login' | 'signup' | 'main' };
+  | { type: 'SET_CURRENT_SCREEN'; payload: 'onboarding' | 'login' | 'signup' | 'forgot-password' | 'main' }
+  | { type: 'SET_ONBOARDING_COMPLETE'; payload: boolean };
 
 export interface NavigationProps {
   navigation: any;

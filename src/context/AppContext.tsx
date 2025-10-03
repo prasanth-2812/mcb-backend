@@ -16,6 +16,7 @@ const initialState: AppState = {
   isLoading: true,
   theme: 'light',
   currentScreen: 'onboarding',
+  onboardingComplete: false,
 };
 
 // Reducer
@@ -45,6 +46,12 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
         ...state, 
         applications: [...state.applications, action.payload],
         appliedJobs: [...state.appliedJobs, action.payload.jobId]
+      };
+    
+    case 'ADD_APPLIED_JOB':
+      return { 
+        ...state, 
+        appliedJobs: [...state.appliedJobs, action.payload]
       };
     
     case 'UPDATE_APPLICATION':
@@ -101,6 +108,12 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
         currentScreen: action.payload
       };
     
+    case 'SET_ONBOARDING_COMPLETE':
+      return {
+        ...state,
+        onboardingComplete: action.payload
+      };
+    
     default:
       return state;
   }
@@ -123,9 +136,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     saveAppData();
   }, [state]);
 
+  const loadJobsInBackground = async () => {
+    try {
+      // Try to load cached jobs first
+      const cachedJobs = await AsyncStorage.getItem('cachedJobs');
+      if (cachedJobs) {
+        const jobs = JSON.parse(cachedJobs);
+        dispatch({ type: 'SET_JOBS', payload: jobs });
+        console.log(`📱 Loaded ${jobs.length} cached jobs`);
+      }
+
+      // Then load fresh data from API
+      console.log('🔄 Loading fresh jobs from API in background...');
+      const apiData = await loadDataFromAPI();
+      dispatch({ type: 'SET_JOBS', payload: apiData.jobs });
+      
+      // Cache the fresh data
+      await AsyncStorage.setItem('cachedJobs', JSON.stringify(apiData.jobs));
+      console.log(`✅ Loaded ${apiData.jobs.length} fresh jobs from API`);
+    } catch (apiError) {
+      console.error('❌ API loading failed:', apiError);
+      // Keep cached jobs if API fails
+    }
+  };
+
   const loadAppData = async () => {
     try {
-      const [authToken, user, applications, notifications, savedJobs, appliedJobs, theme] = await Promise.all([
+      // Load local data first (fast)
+      const [authToken, user, applications, notifications, savedJobs, appliedJobs, theme, onboardingComplete] = await Promise.all([
         AsyncStorage.getItem('authToken'),
         AsyncStorage.getItem('user'),
         AsyncStorage.getItem('applications'),
@@ -133,18 +171,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         AsyncStorage.getItem('savedJobs'),
         AsyncStorage.getItem('appliedJobs'),
         AsyncStorage.getItem('theme'),
+        AsyncStorage.getItem('onboardingComplete'),
       ]);
 
-      // Always load jobs from API, never from AsyncStorage
-      try {
-        console.log('🔄 Loading fresh jobs from API...');
-        const apiData = await loadDataFromAPI();
-        dispatch({ type: 'SET_JOBS', payload: apiData.jobs });
-        console.log(`✅ Loaded ${apiData.jobs.length} jobs from API`);
-      } catch (apiError) {
-        console.error('❌ API loading failed:', apiError);
-        dispatch({ type: 'SET_JOBS', payload: [] });
-      }
+      // Set onboarding status
+      dispatch({ type: 'SET_ONBOARDING_COMPLETE', payload: onboardingComplete === 'true' });
+      console.log('🔄 Onboarding complete:', onboardingComplete === 'true');
+
+      // Set loading to false first to show UI
+      dispatch({ type: 'SET_LOADING', payload: false });
+
+      // Load jobs from API in background (non-blocking)
+      loadJobsInBackground();
 
       // Check if user has valid authentication token
       if (authToken) {
@@ -381,8 +419,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     dispatch({ type: 'TOGGLE_THEME' });
   };
 
-  const navigateToScreen = (screen: 'onboarding' | 'login' | 'signup' | 'main') => {
+  const navigateToScreen = (screen: 'onboarding' | 'login' | 'signup' | 'forgot-password' | 'main') => {
     dispatch({ type: 'SET_CURRENT_SCREEN', payload: screen });
+  };
+
+  const setOnboardingComplete = (complete: boolean) => {
+    dispatch({ type: 'SET_ONBOARDING_COMPLETE', payload: complete });
   };
 
   const contextValue: AppContextType = {
@@ -398,6 +440,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     updateProfile,
     toggleTheme,
     navigateToScreen,
+    setOnboardingComplete,
   };
 
   return (

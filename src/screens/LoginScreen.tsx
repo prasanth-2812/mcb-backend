@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Image, TouchableOpacity, Alert } from 'react-native';
 import { Text, Button, useTheme } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
@@ -8,8 +8,18 @@ import { useApp } from '../context/AppContext';
 import { Colors } from '../constants/colors';
 import ValidatedInput from '../components/ValidatedInput';
 import { validateForm, VALIDATION_RULES, ERROR_MESSAGES } from '../utils/validation';
+import toast from '../services/toastService';
 
-const LoginScreen: React.FC = () => {
+interface LoginScreenProps {
+  route?: {
+    params?: {
+      next?: string;
+    };
+  };
+  navigation?: any;
+}
+
+const LoginScreen: React.FC<LoginScreenProps> = ({ route, navigation }) => {
   const theme = useTheme();
   const { state, login, navigateToScreen } = useApp();
   const isDark = state.theme === 'dark';
@@ -22,6 +32,16 @@ const LoginScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [fieldValidations, setFieldValidations] = useState<{[key: string]: boolean}>({});
+  const [nextRoute, setNextRoute] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Get next route from navigation params
+    if (route?.params?.next) {
+      setNextRoute(route.params.next);
+      console.log('🔄 Login with next route:', route.params.next);
+    }
+  }, [route]);
+
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -58,11 +78,48 @@ const LoginScreen: React.FC = () => {
       const result = await login(formData.email, formData.password);
       
       if (result.success) {
-        navigateToScreen('main');
+        // Show success toast
+        toast.loginSuccessful();
+        
+        // Navigate to next route or main screen
+        if (nextRoute) {
+          console.log(`🔄 Navigating to next route: ${nextRoute}`);
+          // Parse the next route and navigate accordingly
+          if (nextRoute.includes('/jobs/apply')) {
+            // Navigate to main app (authenticated mode)
+            navigateToScreen('main');
+          } else if (nextRoute.includes('/jobs')) {
+            navigateToScreen('main');
+          } else {
+            navigateToScreen('main');
+          }
+        } else {
+          // Check if onboarding is complete to determine where to go
+          const checkOnboarding = async () => {
+            try {
+              const isComplete = await AsyncStorage.getItem('onboardingComplete');
+              if (isComplete === 'true') {
+                // Onboarding complete, go to main (jobs browsing mode)
+                navigateToScreen('main');
+              } else {
+                // No onboarding, go to main anyway
+                navigateToScreen('main');
+              }
+            } catch (error) {
+              console.error('❌ Failed to check onboarding status:', error);
+              navigateToScreen('main');
+            }
+          };
+          checkOnboarding();
+        }
       } else {
+        // Show error toast
+        toast.loginFailed();
         Alert.alert('Login Failed', result.error || 'Please check your credentials');
       }
     } catch (error) {
+      console.error('❌ Login error:', error);
+      toast.loginFailed();
       Alert.alert('Error', 'An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
@@ -149,7 +206,16 @@ const LoginScreen: React.FC = () => {
 
           <TouchableOpacity 
             style={styles.forgotPassword}
-            onPress={() => navigateToScreen('forgot-password')}
+            onPress={() => {
+              console.log('🔄 Forgot Password clicked!');
+              console.log('🔄 Current state:', { 
+                currentScreen: state.currentScreen, 
+                onboardingComplete: state.onboardingComplete, 
+                isAuthenticated: state.isAuthenticated 
+              });
+              // Always use navigateToScreen - it should work in both contexts
+              navigateToScreen('forgot-password');
+            }}
           >
             <Text style={[styles.forgotPasswordText, { color: '#3B82F6' }]}>
               Forgot Password?
@@ -160,10 +226,10 @@ const LoginScreen: React.FC = () => {
             style={[
               styles.loginButton,
               { backgroundColor: '#3B82F6' },
-              (isLoading || !fieldValidations.email || !fieldValidations.password) && styles.loginButtonDisabled
+              isLoading && styles.loginButtonDisabled
             ]}
             onPress={handleLogin}
-            disabled={isLoading || !fieldValidations.email || !fieldValidations.password}
+            disabled={isLoading}
           >
             <Text style={styles.loginButtonText}>
               {isLoading ? 'Signing In...' : 'Sign In'}
