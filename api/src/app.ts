@@ -10,7 +10,28 @@ import { swaggerSpec } from './docs/swagger';
 
 const app = express();
 app.use(helmet());
-app.use(cors());
+
+// CORS configuration
+const corsOptions = {
+  origin: [
+    'http://localhost:3000',        // React development server
+    'http://localhost:3001',        // Alternative React port
+    'http://127.0.0.1:3000',        // Localhost alternative
+    'http://127.0.0.1:3001',
+    'http://125.18.84.110:3000',       // Another device IP
+    'http://10.115.43.116:3000',       // Your device IP
+    'http://10.115.43.116:3001'        // Your device IP alternative port
+    // Add your production frontend URLs here
+    // 'https://yourdomain.com',
+    // 'https://www.yourdomain.com'
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  credentials: true, // Allow cookies and authorization headers
+  optionsSuccessStatus: 200 // For legacy browser support
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(morgan('dev'));
 
