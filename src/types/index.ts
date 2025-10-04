@@ -194,8 +194,9 @@ export interface AppState {
   isAuthenticated: boolean;
   isLoading: boolean;
   theme: 'light' | 'dark';
-  currentScreen: 'onboarding' | 'login' | 'signup' | 'forgot-password' | 'main';
+  currentScreen: 'onboarding' | 'login' | 'signup' | 'forgot-password' | 'reset-password' | 'main';
   onboardingComplete: boolean;
+  navigationParams: any;
 }
 
 export interface AppContextType {
@@ -210,7 +211,7 @@ export interface AppContextType {
   markNotificationAsRead: (notificationId: string) => Promise<void>;
   updateProfile: (profile: Partial<UserProfile>) => Promise<void>;
   toggleTheme: () => void;
-  navigateToScreen: (screen: 'onboarding' | 'login' | 'signup' | 'forgot-password' | 'main') => void;
+  navigateToScreen: (screen: 'onboarding' | 'login' | 'signup' | 'forgot-password' | 'reset-password' | 'main', params?: any) => void;
   setOnboardingComplete: (complete: boolean) => void;
   refreshApplications: () => Promise<void>;
   refreshNotifications: () => Promise<void>;
@@ -233,7 +234,8 @@ export type AppAction =
   | { type: 'UPDATE_PROFILE'; payload: Partial<UserProfile> }
   | { type: 'TOGGLE_THEME' }
   | { type: 'SET_THEME'; payload: 'light' | 'dark' }
-  | { type: 'SET_CURRENT_SCREEN'; payload: 'onboarding' | 'login' | 'signup' | 'forgot-password' | 'main' }
+  | { type: 'SET_CURRENT_SCREEN'; payload: 'onboarding' | 'login' | 'signup' | 'forgot-password' | 'reset-password' | 'main' }
+  | { type: 'SET_NAVIGATION_PARAMS'; payload: any }
   | { type: 'SET_ONBOARDING_COMPLETE'; payload: boolean };
 
 export interface NavigationProps {

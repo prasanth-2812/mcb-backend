@@ -29,15 +29,15 @@ const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({ route }) => {
   const [token, setToken] = useState('');
 
   useEffect(() => {
-    // Get token from route params or URL
-    const resetToken = route?.params?.token || '';
+    // Get token from navigation params
+    const resetToken = state.navigationParams?.token || '';
     setToken(resetToken);
     
     if (!resetToken) {
       Alert.alert('Error', 'Invalid reset link. Please request a new password reset.');
       navigateToScreen('forgot-password');
     }
-  }, [route, navigateToScreen]);
+  }, [state.navigationParams, navigateToScreen]);
 
   const handleBackToLogin = () => {
     navigateToScreen('login');

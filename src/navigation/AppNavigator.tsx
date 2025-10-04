@@ -12,6 +12,7 @@ import OnboardingScreen from '../screens/OnboardingScreen';
 import LoginScreen from '../screens/LoginScreen';
 import SignupScreen from '../screens/SignupScreen';
 import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
+import ResetPasswordScreen from '../screens/ResetPasswordScreen';
 import HomeScreen from '../screens/HomeScreen';
 import JobsScreen from '../screens/JobsScreen';
 import JobDetailsScreen from '../screens/JobDetailsScreen';
@@ -308,6 +309,8 @@ const AuthNavigator = () => {
       return <SignupScreen />;
     case 'forgot-password':
       return <ForgotPasswordScreen />;
+    case 'reset-password':
+      return <ResetPasswordScreen />;
     default:
       return <OnboardingScreen />;
   }

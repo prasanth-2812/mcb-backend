@@ -11,11 +11,13 @@ export interface UserAttributes {
   skills?: string[] | null;
   resumeUrl?: string | null;
   avatarUrl?: string | null;
+  resetPasswordToken?: string | null;
+  resetPasswordExpires?: Date | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
 
-export type UserCreation = Optional<UserAttributes, 'id' | 'phone' | 'createdAt' | 'updatedAt'>;
+export type UserCreation = Optional<UserAttributes, 'id' | 'phone' | 'resetPasswordToken' | 'resetPasswordExpires' | 'createdAt' | 'updatedAt'>;
 
 export class User extends Model<UserAttributes, UserCreation> implements UserAttributes {
   declare id: string;
@@ -27,6 +29,8 @@ export class User extends Model<UserAttributes, UserCreation> implements UserAtt
   declare skills: string[] | null;
   declare resumeUrl: string | null;
   declare avatarUrl: string | null;
+  declare resetPasswordToken: string | null;
+  declare resetPasswordExpires: Date | null;
   declare readonly createdAt: Date;
   declare readonly updatedAt: Date;
 }
@@ -41,6 +45,8 @@ User.init({
   skills: { type: DataTypes.JSON, allowNull: true },
   resumeUrl: { type: DataTypes.STRING, allowNull: true },
   avatarUrl: { type: DataTypes.STRING, allowNull: true },
+  resetPasswordToken: { type: DataTypes.STRING, allowNull: true },
+  resetPasswordExpires: { type: DataTypes.DATE, allowNull: true },
 }, {
   sequelize,
   tableName: 'users',

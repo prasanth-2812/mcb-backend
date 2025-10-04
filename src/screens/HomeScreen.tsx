@@ -1,14 +1,10 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, ScrollView, RefreshControl, StatusBar, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { Text, Card, Button, useTheme, Chip, Avatar, ProgressBar } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useApp } from '../context/AppContext';
-import { Colors } from '../constants/colors';
-import { Sizes } from '../constants/sizes';
-import ProfileCard from '../components/ProfileCard';
-import JobCard from '../components/JobCard';
 import SearchBar from '../components/SearchBar';
 import JobCardSkeleton from '../components/JobCardSkeleton';
 // Removed dummy data import - using API data only
@@ -112,16 +108,6 @@ const HomeScreen: React.FC = () => {
     return recentJobs;
   };
 
-  const loadRecommendedJobs = async () => {
-    try {
-      const recommendedJobs = await getRecommendedJobs();
-      console.log('🏠 Loaded recommended jobs:', recommendedJobs.length);
-      return recommendedJobs;
-    } catch (error) {
-      console.error('❌ Failed to load recommended jobs:', error);
-      return [];
-    }
-  };
 
   const getJobMatchPercentage = (job: any) => {
     if (!job) return 60;

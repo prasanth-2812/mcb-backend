@@ -15,10 +15,28 @@ const ForgotPasswordScreen: React.FC = () => {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const [showTokenInput, setShowTokenInput] = useState(false);
+  const [resetToken, setResetToken] = useState('');
 
   const handleBackToLogin = () => {
     // Reset currentScreen to show the tab navigator again
     navigateToScreen('login');
+  };
+
+  const handleEnterToken = () => {
+    if (!resetToken.trim()) {
+      Alert.alert('Error', 'Please enter the reset token from your email');
+      return;
+    }
+    
+    // Navigate to reset password screen with token
+    navigateToScreen('reset-password', { token: resetToken });
+  };
+
+  const handleBackToEmailStep = () => {
+    setShowTokenInput(false);
+    setEmailSent(false);
+    setResetToken('');
   };
 
   const handleSendResetEmail = async () => {
@@ -141,7 +159,7 @@ const ForgotPasswordScreen: React.FC = () => {
               </Text>
               
               <Text variant="bodyLarge" style={[styles.successMessage, { color: isDark ? Colors.textSecondary : Colors.textSecondary }]}>
-                We've sent a password reset link to:
+                We've sent password reset instructions to:
               </Text>
               
               <Text variant="bodyMedium" style={[styles.emailText, { color: isDark ? Colors.white : Colors.primary }]}>
@@ -149,8 +167,47 @@ const ForgotPasswordScreen: React.FC = () => {
               </Text>
               
               <Text variant="bodyMedium" style={[styles.instructionsText, { color: isDark ? Colors.textSecondary : Colors.textSecondary }]}>
-                Please check your email and click the link to reset your password. The link will expire in 15 minutes.
+                Please check your email and follow the instructions to reset your password.
               </Text>
+
+              {/* Token Input Section */}
+              <View style={styles.tokenSection}>
+                <Text variant="bodyMedium" style={[styles.tokenLabel, { color: isDark ? Colors.textSecondary : Colors.textSecondary }]}>
+                  Or enter the reset token from your email:
+                </Text>
+                
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    mode="outlined"
+                    label="Reset Token"
+                    value={resetToken}
+                    onChangeText={setResetToken}
+                    style={styles.input}
+                    placeholder="Paste your reset token here"
+                    placeholderTextColor={isDark ? Colors.textSecondary : '#999'}
+                    outlineColor={isDark ? Colors.border : '#E0E0E0'}
+                    activeOutlineColor={isDark ? Colors.primary : Colors.primary}
+                    textColor={isDark ? Colors.white : Colors.textPrimary}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    multiline={true}
+                    numberOfLines={2}
+                  />
+                </View>
+                
+                <Button
+                  mode="contained"
+                  onPress={handleEnterToken}
+                  disabled={!resetToken.trim()}
+                  style={[styles.tokenButton, { 
+                    backgroundColor: resetToken.trim() ? (isDark ? Colors.primary : Colors.primary) : '#CCCCCC'
+                  }]}
+                  textColor="#FFFFFF"
+                  icon={() => <MaterialCommunityIcons name="key" size={20} color="#FFFFFF" />}
+                >
+                  Reset Password
+                </Button>
+              </View>
             </Card.Content>
           </Card>
 
@@ -421,6 +478,22 @@ const styles = StyleSheet.create({
   backToLoginButton: {
     borderRadius: 12,
     paddingVertical: 8,
+  },
+  tokenSection: {
+    marginTop: 24,
+    paddingTop: 24,
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+  },
+  tokenLabel: {
+    textAlign: 'center',
+    marginBottom: 16,
+    fontWeight: '500',
+  },
+  tokenButton: {
+    borderRadius: 12,
+    paddingVertical: 8,
+    marginTop: 12,
   },
   helpContainer: {
     alignItems: 'center',

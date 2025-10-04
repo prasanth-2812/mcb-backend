@@ -24,6 +24,7 @@ const initialState: AppState = {
   theme: 'light',
   currentScreen: 'onboarding',
   onboardingComplete: false,
+  navigationParams: {},
 };
 
 // Reducer
@@ -113,6 +114,12 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
       return {
         ...state,
         currentScreen: action.payload
+      };
+    
+    case 'SET_NAVIGATION_PARAMS':
+      return {
+        ...state,
+        navigationParams: action.payload
       };
     
     case 'SET_ONBOARDING_COMPLETE':
@@ -553,8 +560,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     dispatch({ type: 'TOGGLE_THEME' });
   };
 
-  const navigateToScreen = (screen: 'onboarding' | 'login' | 'signup' | 'forgot-password' | 'main') => {
+  const navigateToScreen = (screen: 'onboarding' | 'login' | 'signup' | 'forgot-password' | 'reset-password' | 'main', params?: any) => {
     dispatch({ type: 'SET_CURRENT_SCREEN', payload: screen });
+    if (params) {
+      dispatch({ type: 'SET_NAVIGATION_PARAMS', payload: params });
+    }
   };
 
   const setOnboardingComplete = (complete: boolean) => {
