@@ -50,6 +50,9 @@ class ProfileService {
       const config: RequestInit = {
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
           ...(token && { 'Authorization': `Bearer ${token}` }),
           ...options.headers,
         },
@@ -112,6 +115,9 @@ class ProfileService {
       const config: RequestInit = {
         method: 'POST',
         headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
           ...(token && { 'Authorization': `Bearer ${token}` }),
           'Content-Type': 'multipart/form-data',
         },
@@ -159,12 +165,16 @@ class ProfileService {
 
   // Get user profile
   async getProfile(): Promise<UserProfile> {
-    return this.request<UserProfile>('/profile');
+    // Add timestamp to prevent caching
+    const timestamp = Date.now();
+    return this.request<UserProfile>(`/profile?t=${timestamp}`);
   }
 
   // Update user profile
   async updateProfile(profileData: UpdateProfileRequest): Promise<UserProfile> {
-    return this.request<UserProfile>('/profile', {
+    // Add timestamp to prevent caching
+    const timestamp = Date.now();
+    return this.request<UserProfile>(`/profile?t=${timestamp}`, {
       method: 'PUT',
       body: JSON.stringify(profileData),
     });

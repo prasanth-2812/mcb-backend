@@ -7,6 +7,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { useApp } from '../context/AppContext';
 import { Colors } from '../constants/colors';
 import { Sizes } from '../constants/sizes';
+import { FileUploadService } from '../services/fileUploadService';
 
 const ProfileScreen: React.FC = () => {
   const theme = useTheme();
@@ -21,6 +22,16 @@ const ProfileScreen: React.FC = () => {
   
 
   useEffect(() => {
+    // Debug: Log current user data
+    console.log('📱 ProfileScreen - Current user data:', {
+      name: state.user?.name,
+      email: state.user?.email,
+      phone: state.user?.phone,
+      location: state.user?.location,
+      skills: state.user?.skills,
+      preferences: state.user?.preferences
+    });
+    
     // Sync resume and profile picture state with user data
     if (state.user?.resume) {
       setResumeUploaded(state.user.resume.uploaded);
@@ -48,41 +59,111 @@ const ProfileScreen: React.FC = () => {
       [
         {
           text: 'Camera',
-          onPress: () => {
-            // Simulate camera capture
-            const mockImageUri = 'https://via.placeholder.com/300x300/1976D2/FFFFFF?text=Profile';
-            setProfilePicture(mockImageUri);
-            setProfilePictureUploaded(true);
-            
-            // Update user profile
-            if (state.user) {
-              updateProfile({
-                ...state.user,
-                profilePicture: {
-                  uri: mockImageUri,
-                  uploaded: true
+          onPress: async () => {
+            try {
+              const result = await FileUploadService.takePhoto();
+              if (result.success && result.uri) {
+                // Validate file
+                const validation = FileUploadService.validateFile(
+                  result.fileSize || 0, 
+                  result.mimeType || 'image/jpeg', 
+                  5 // 5MB max for images
+                );
+                
+                if (!validation.valid) {
+                  Alert.alert('Invalid File', validation.error);
+                  return;
                 }
-              });
+
+                // Upload to server
+                const uploadResult = await FileUploadService.uploadFile(
+                  result.uri,
+                  result.fileName || 'profile.jpg',
+                  result.mimeType || 'image/jpeg',
+                  'avatar'
+                );
+
+                if (uploadResult.success && uploadResult.uri) {
+                  setProfilePicture(uploadResult.uri);
+                  setProfilePictureUploaded(true);
+                  
+                  // Update local state
+                  if (state.user) {
+                    const updatedUser = {
+                      ...state.user,
+                      profilePicture: {
+                        uri: uploadResult.uri,
+                        uploaded: true
+                      }
+                    };
+                    (state as any).dispatch({ type: 'UPDATE_PROFILE', payload: updatedUser });
+                  }
+                  
+                  Alert.alert('Success', 'Profile picture uploaded successfully!');
+                } else {
+                  Alert.alert('Upload Failed', uploadResult.error || 'Failed to upload profile picture');
+                }
+              } else {
+                Alert.alert('Error', result.error || 'Failed to capture photo');
+              }
+            } catch (error) {
+              console.error('Profile picture upload error:', error);
+              Alert.alert('Error', 'Failed to upload profile picture');
             }
           }
         },
         {
           text: 'Gallery',
-          onPress: () => {
-            // Simulate gallery selection
-            const mockImageUri = 'https://via.placeholder.com/300x300/4CAF50/FFFFFF?text=Profile';
-            setProfilePicture(mockImageUri);
-            setProfilePictureUploaded(true);
-            
-            // Update user profile
-            if (state.user) {
-              updateProfile({
-                ...state.user,
-                profilePicture: {
-                  uri: mockImageUri,
-                  uploaded: true
+          onPress: async () => {
+            try {
+              const result = await FileUploadService.pickImage();
+              if (result.success && result.uri) {
+                // Validate file
+                const validation = FileUploadService.validateFile(
+                  result.fileSize || 0, 
+                  result.mimeType || 'image/jpeg', 
+                  5 // 5MB max for images
+                );
+                
+                if (!validation.valid) {
+                  Alert.alert('Invalid File', validation.error);
+                  return;
                 }
-              });
+
+                // Upload to server
+                const uploadResult = await FileUploadService.uploadFile(
+                  result.uri,
+                  result.fileName || 'profile.jpg',
+                  result.mimeType || 'image/jpeg',
+                  'avatar'
+                );
+
+                if (uploadResult.success && uploadResult.uri) {
+                  setProfilePicture(uploadResult.uri);
+                  setProfilePictureUploaded(true);
+                  
+                  // Update local state
+                  if (state.user) {
+                    const updatedUser = {
+                      ...state.user,
+                      profilePicture: {
+                        uri: uploadResult.uri,
+                        uploaded: true
+                      }
+                    };
+                    (state as any).dispatch({ type: 'UPDATE_PROFILE', payload: updatedUser });
+                  }
+                  
+                  Alert.alert('Success', 'Profile picture uploaded successfully!');
+                } else {
+                  Alert.alert('Upload Failed', uploadResult.error || 'Failed to upload profile picture');
+                }
+              } else {
+                Alert.alert('Error', result.error || 'Failed to select image');
+              }
+            } catch (error) {
+              console.error('Profile picture upload error:', error);
+              Alert.alert('Error', 'Failed to upload profile picture');
             }
           }
         },
@@ -104,24 +185,62 @@ const ProfileScreen: React.FC = () => {
     console.log('Navigate to privacy settings');
   };
 
-  const handleResumeUpload = () => {
-    setResumeUploaded(true);
-    setResumeFileName('John_Doe_Resume.pdf');
-    // Update the user state with new resume info
-    if (state.user) {
-      updateProfile({
-        ...state.user,
-        resume: {
-          fileName: 'John_Doe_Resume.pdf',
-          uploaded: true
+  const handleResumeUpload = async () => {
+    try {
+      const result = await FileUploadService.pickDocument();
+      if (result.success && result.uri) {
+        // Validate file
+        const validation = FileUploadService.validateFile(
+          result.fileSize || 0, 
+          result.mimeType || 'application/pdf', 
+          10 // 10MB max for documents
+        );
+        
+        if (!validation.valid) {
+          Alert.alert('Invalid File', validation.error);
+          return;
         }
-      });
+
+        // Upload to server
+        const uploadResult = await FileUploadService.uploadFile(
+          result.uri,
+          result.fileName || 'resume.pdf',
+          result.mimeType || 'application/pdf',
+          'resume'
+        );
+
+        if (uploadResult.success && uploadResult.uri) {
+          setResumeUploaded(true);
+          setResumeFileName(uploadResult.fileName || result.fileName || 'resume.pdf');
+          
+          // Update local state
+          if (state.user) {
+            const updatedUser = {
+              ...state.user,
+              resume: {
+                fileName: uploadResult.fileName || result.fileName || 'resume.pdf',
+                uploaded: true
+              }
+            };
+            (state as any).dispatch({ type: 'UPDATE_PROFILE', payload: updatedUser });
+          }
+          
+          Alert.alert('Success', 'Resume uploaded successfully!');
+        } else {
+          Alert.alert('Upload Failed', uploadResult.error || 'Failed to upload resume');
+        }
+      } else {
+        Alert.alert('Error', result.error || 'Failed to select document');
+      }
+    } catch (error) {
+      console.error('Resume upload error:', error);
+      Alert.alert('Error', 'Failed to upload resume');
     }
-    console.log('Resume uploaded');
   };
 
   const handleAddSkill = () => {
-    console.log('Add new skill');
+    // Navigate to edit profile screen where skills can be managed
+    (navigation as any).navigate('EditProfile');
   };
 
   const handleLogout = () => {
@@ -153,8 +272,8 @@ const ProfileScreen: React.FC = () => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#F9F9F9" />
+    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? '#121212' : '#F9F9F9' }]}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={isDark ? '#121212' : '#F9F9F9'} />
       
       <ScrollView 
         style={styles.scrollView}
@@ -195,10 +314,10 @@ const ProfileScreen: React.FC = () => {
                 </View>
               )}
             </View>
-            <Text variant="headlineMedium" style={styles.userName}>
+            <Text variant="headlineMedium" style={[styles.userName, { color: isDark ? '#FFFFFF' : '#1A1A1A' }]}>
               {state.user?.name || 'User Name'}
             </Text>
-            <Text variant="bodyLarge" style={styles.userTitle}>
+            <Text variant="bodyLarge" style={[styles.userTitle, { color: isDark ? '#B0B0B0' : '#666666' }]}>
               {state.user?.preferences?.role || 'Job Title'}
             </Text>
             
@@ -215,7 +334,7 @@ const ProfileScreen: React.FC = () => {
           </View>
 
           {/* Profile Info Card */}
-          <Card style={styles.profileInfoCard}>
+          <Card style={[styles.profileInfoCard, { backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF' }]}>
             <Card.Content style={styles.profileInfoContent}>
               <View style={styles.infoRow}>
                 <View style={styles.infoItem}>
@@ -250,7 +369,7 @@ const ProfileScreen: React.FC = () => {
           </Card>
 
           {/* Profile Completion */}
-          <Card style={styles.completionCard}>
+          <Card style={[styles.completionCard, { backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF' }]}>
             <Card.Content style={styles.completionContent}>
               <View style={styles.completionHeader}>
                 <Text variant="titleMedium" style={styles.completionTitle}>
@@ -281,7 +400,7 @@ const ProfileScreen: React.FC = () => {
           </Card>
 
           {/* Resume Section */}
-          <Card style={styles.resumeCard}>
+          <Card style={[styles.resumeCard, { backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF' }]}>
             <Card.Content style={styles.resumeContent}>
               <View style={styles.resumeHeader}>
                 <Text variant="titleMedium" style={styles.resumeTitle}>
@@ -296,18 +415,27 @@ const ProfileScreen: React.FC = () => {
                     <MaterialCommunityIcons name="file-document-outline" size={24} color="#1976D2" />
                     <View style={styles.resumeFileInfo}>
                       <Text variant="bodyMedium" style={styles.resumeFileName}>{state.user.resume.fileName}</Text>
-                      <Text variant="bodySmall" style={styles.resumeDate}>Last updated: Feb 1, 2024</Text>
+                      <Text variant="bodySmall" style={styles.resumeDate}>
+                        Last updated: {new Date().toLocaleDateString('en-US', { 
+                          year: 'numeric', 
+                          month: 'short', 
+                          day: 'numeric' 
+                        })}
+                      </Text>
                     </View>
                   </View>
                   <Button
                     mode="text"
                     onPress={() => {
                       setResumeUploaded(false);
+                      setResumeFileName('');
                       if (state.user) {
-                        updateProfile({
+                        const updatedUser = {
                           ...state.user,
                           resume: { fileName: "", uploaded: false }
-                        });
+                        };
+                        // Update local state directly
+                        (state as any).dispatch({ type: 'UPDATE_PROFILE', payload: updatedUser });
                       }
                     }}
                     textColor="#1976D2"
@@ -318,7 +446,7 @@ const ProfileScreen: React.FC = () => {
               ) : (
                 <Button
                   mode="outlined"
-                  onPress={handleResumeBuilder}
+                  onPress={handleResumeUpload}
                   style={styles.uploadButton}
                   textColor="#1976D2"
                   icon={() => <MaterialCommunityIcons name="file-upload-outline" size={20} color="#1976D2" />}
@@ -330,7 +458,7 @@ const ProfileScreen: React.FC = () => {
           </Card>
 
           {/* Skills Section */}
-          <Card style={styles.skillsCard}>
+          <Card style={[styles.skillsCard, { backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF' }]}>
             <Card.Content style={styles.skillsContent}>
               <View style={styles.skillsHeader}>
                 <Text variant="titleMedium" style={styles.skillsTitle}>
@@ -357,7 +485,7 @@ const ProfileScreen: React.FC = () => {
           </Card>
 
           {/* Career Preferences Section */}
-          <Card style={styles.preferencesCard}>
+          <Card style={[styles.preferencesCard, { backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF' }]}>
             <Card.Content style={styles.preferencesContent}>
               <Text variant="titleMedium" style={styles.preferencesTitle}>
                 Career Preferences
@@ -402,7 +530,7 @@ const ProfileScreen: React.FC = () => {
           </Card>
 
           {/* Settings Section */}
-          <Card style={styles.settingsCard}>
+          <Card style={[styles.settingsCard, { backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF' }]}>
             <Card.Content style={styles.settingsContent}>
               <Text variant="titleMedium" style={styles.settingsTitle}>
                 Settings

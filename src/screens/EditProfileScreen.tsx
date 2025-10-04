@@ -9,11 +9,12 @@ import { Colors, DarkColors } from '../constants/colors';
 import { Sizes } from '../constants/sizes';
 import ValidatedInput from '../components/ValidatedInput';
 import { validateForm, VALIDATION_RULES, ERROR_MESSAGES } from '../utils/validation';
+import { FileUploadService } from '../services/fileUploadService';
 
 const EditProfileScreen: React.FC = () => {
   const theme = useTheme();
   const navigation = useNavigation();
-  const { state, updateProfile } = useApp();
+  const { state, updateProfile, dispatch } = useApp();
   const isDark = state.theme === 'dark';
   
   const [formData, setFormData] = useState({
@@ -71,20 +72,86 @@ const EditProfileScreen: React.FC = () => {
       [
         {
           text: 'Camera',
-          onPress: () => {
-            // Simulate camera capture
-            const mockImageUri = 'https://via.placeholder.com/300x300/1976D2/FFFFFF?text=Profile';
-            setProfilePicture(mockImageUri);
-            setProfilePictureUploaded(true);
+          onPress: async () => {
+            try {
+              const result = await FileUploadService.takePhoto();
+              if (result.success && result.uri) {
+                // Validate file
+                const validation = FileUploadService.validateFile(
+                  result.fileSize || 0, 
+                  result.mimeType || 'image/jpeg', 
+                  5 // 5MB max for images
+                );
+                
+                if (!validation.valid) {
+                  Alert.alert('Invalid File', validation.error);
+                  return;
+                }
+
+                // Upload to server
+                const uploadResult = await FileUploadService.uploadFile(
+                  result.uri,
+                  result.fileName || 'profile.jpg',
+                  result.mimeType || 'image/jpeg',
+                  'avatar'
+                );
+
+                if (uploadResult.success && uploadResult.uri) {
+                  setProfilePicture(uploadResult.uri);
+                  setProfilePictureUploaded(true);
+                  Alert.alert('Success', 'Profile picture uploaded successfully!');
+                } else {
+                  Alert.alert('Upload Failed', uploadResult.error || 'Failed to upload profile picture');
+                }
+              } else {
+                Alert.alert('Error', result.error || 'Failed to capture photo');
+              }
+            } catch (error) {
+              console.error('Profile picture upload error:', error);
+              Alert.alert('Error', 'Failed to upload profile picture');
+            }
           }
         },
         {
           text: 'Gallery',
-          onPress: () => {
-            // Simulate gallery selection
-            const mockImageUri = 'https://via.placeholder.com/300x300/4CAF50/FFFFFF?text=Profile';
-            setProfilePicture(mockImageUri);
-            setProfilePictureUploaded(true);
+          onPress: async () => {
+            try {
+              const result = await FileUploadService.pickImage();
+              if (result.success && result.uri) {
+                // Validate file
+                const validation = FileUploadService.validateFile(
+                  result.fileSize || 0, 
+                  result.mimeType || 'image/jpeg', 
+                  5 // 5MB max for images
+                );
+                
+                if (!validation.valid) {
+                  Alert.alert('Invalid File', validation.error);
+                  return;
+                }
+
+                // Upload to server
+                const uploadResult = await FileUploadService.uploadFile(
+                  result.uri,
+                  result.fileName || 'profile.jpg',
+                  result.mimeType || 'image/jpeg',
+                  'avatar'
+                );
+
+                if (uploadResult.success && uploadResult.uri) {
+                  setProfilePicture(uploadResult.uri);
+                  setProfilePictureUploaded(true);
+                  Alert.alert('Success', 'Profile picture uploaded successfully!');
+                } else {
+                  Alert.alert('Upload Failed', uploadResult.error || 'Failed to upload profile picture');
+                }
+              } else {
+                Alert.alert('Error', result.error || 'Failed to select image');
+              }
+            } catch (error) {
+              console.error('Profile picture upload error:', error);
+              Alert.alert('Error', 'Failed to upload profile picture');
+            }
           }
         },
         {
@@ -123,43 +190,65 @@ const EditProfileScreen: React.FC = () => {
     setSkills(prev => prev.filter(skill => skill !== skillToRemove));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!validateFormData()) {
       Alert.alert('Validation Error', 'Please fix the errors below and try again.');
       return;
     }
 
-    // Update profile with new data
-    const updatedProfile = {
-      ...state.user,
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      location: formData.location,
-      skills: skills,
-      profilePicture: {
-        uri: profilePicture,
-        uploaded: profilePictureUploaded
-      },
-      preferences: {
-        role: formData.role,
-        type: formData.jobType,
-        location: formData.preferredLocation,
-      }
-    };
+    try {
+      // Update only the fields that the API can handle
+      const apiProfileUpdate = {
+        name: formData.name,
+        phone: formData.phone,
+        location: formData.location,
+        skills: skills,
+      };
 
-    updateProfile(updatedProfile);
-    
-    Alert.alert(
-      'Success',
-      'Profile updated successfully!',
-      [
-        {
-          text: 'OK',
-          onPress: () => navigation.goBack()
+      console.log('🔄 Sending profile update to API:', apiProfileUpdate);
+      console.log('🔄 Location being sent to API:', formData.location);
+      await updateProfile(apiProfileUpdate);
+
+      // Update local state with all fields (including those not in API)
+      const fullProfileUpdate = {
+        ...state.user,
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        location: formData.location,
+        skills: skills,
+        profilePicture: {
+          uri: profilePicture,
+          uploaded: profilePictureUploaded
+        },
+        preferences: {
+          role: formData.role,
+          type: formData.jobType,
+          location: formData.preferredLocation,
         }
-      ]
-    );
+      };
+
+      // Update local state with all fields
+      dispatch({ type: 'UPDATE_PROFILE', payload: fullProfileUpdate });
+      
+      Alert.alert(
+        'Success',
+        'Profile updated successfully!',
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.goBack()
+          }
+        ]
+      );
+    } catch (error) {
+      console.error('❌ Profile update failed:', error);
+      Alert.alert(
+        'Error',
+        'Failed to update profile. Please try again.',
+        [{ text: 'OK' }]
+      );
+    }
   };
 
   const handleCancel = () => {

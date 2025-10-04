@@ -93,9 +93,18 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
       };
     
     case 'UPDATE_PROFILE':
+      console.log('🔄 UPDATE_PROFILE action triggered');
+      console.log('🔄 Current user location:', state.user?.location);
+      console.log('🔄 Update payload location:', action.payload.location);
+      console.log('🔄 Update payload preferences:', action.payload.preferences);
+      
+      const updatedUser = state.user ? { ...state.user, ...action.payload } : null;
+      console.log('🔄 Updated user location:', updatedUser?.location);
+      console.log('🔄 Updated user preferences:', updatedUser?.preferences);
+      
       return {
         ...state,
-        user: state.user ? { ...state.user, ...action.payload } : null
+        user: updatedUser
       };
     
     case 'TOGGLE_THEME':
@@ -145,10 +154,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     loadAppData();
   }, []);
 
-  // Save data to AsyncStorage whenever state changes
+  // Save data to AsyncStorage whenever state changes (but not during initial load)
   useEffect(() => {
-    saveAppData();
-  }, [state]);
+    if (!state.isLoading) {
+      saveAppData();
+    }
+  }, [state.user, state.applications, state.notifications, state.savedJobs, state.appliedJobs, state.theme]);
 
   const loadJobsInBackground = async () => {
     try {
@@ -196,28 +207,61 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         try {
           console.log('🔄 Validating auth token...', authToken.substring(0, 20) + '...');
           const userProfile = await authService.getCurrentUser(authToken);
+          console.log('📡 API user profile received:', {
+            id: userProfile.id,
+            name: userProfile.name,
+            email: userProfile.email,
+            phone: userProfile.phone,
+            location: userProfile.location,
+            skills: userProfile.skills
+          });
           
-          // Convert API user to app user profile
+          // Load existing user data from AsyncStorage if available
+          let existingUserData = null;
+          if (user) {
+            try {
+              existingUserData = JSON.parse(user);
+              console.log('📱 Found existing user data in storage:', existingUserData);
+              console.log('📱 Existing location:', existingUserData?.location);
+              console.log('📱 Existing preferences:', existingUserData?.preferences);
+            } catch (parseError) {
+              console.log('⚠️ Could not parse existing user data, using API data');
+            }
+          } else {
+            console.log('⚠️ No existing user data found in AsyncStorage');
+          }
+          
+          // Convert API user to app user profile, merging with existing data
           const appUserProfile: UserProfile = {
             id: userProfile.id,
             name: userProfile.name,
             email: userProfile.email,
             phone: userProfile.phone || '',
-            location: '',
-            skills: [],
-            resume: { fileName: '', uploaded: false },
-            profilePicture: { uri: '', uploaded: false },
-            profileCompletion: 50,
-            preferences: {
+            // Use API location first, then fallback to existing local data
+            location: userProfile.location || existingUserData?.location || '',
+            skills: userProfile.skills || existingUserData?.skills || [],
+            resume: existingUserData?.resume || { fileName: '', uploaded: false },
+            profilePicture: existingUserData?.profilePicture || { uri: '', uploaded: false },
+            profileCompletion: existingUserData?.profileCompletion || 50,
+            preferences: existingUserData?.preferences || {
               role: userProfile.role === 'employer' ? 'Hiring Manager' : 'Software Developer',
               location: '',
               type: 'Full-time',
             },
           };
           
+          console.log('📱 Final merged profile location:', appUserProfile.location);
+          console.log('📱 Final merged profile preferences:', appUserProfile.preferences);
+          
           dispatch({ type: 'SET_USER', payload: appUserProfile });
           console.log('✅ User authenticated with valid token');
           console.log('🔐 Authentication state:', { isAuthenticated: true, userId: appUserProfile.id });
+          console.log('👤 Loaded user profile:', {
+            name: appUserProfile.name,
+            phone: appUserProfile.phone,
+            skills: appUserProfile.skills,
+            location: appUserProfile.location
+          });
           
           // Load user-specific data from APIs
           loadUserData();
@@ -292,6 +336,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const saveAppData = async () => {
     try {
+      console.log('💾 Saving app data to AsyncStorage...');
+      console.log('💾 User location being saved:', state.user?.location);
+      console.log('💾 User preferences being saved:', state.user?.preferences);
+      
       await Promise.all([
         AsyncStorage.setItem('user', JSON.stringify(state.user)),
         // Don't save jobs to AsyncStorage - always load fresh from API
@@ -301,8 +349,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         AsyncStorage.setItem('appliedJobs', JSON.stringify(state.appliedJobs)),
         AsyncStorage.setItem('theme', state.theme),
       ]);
+      
+      console.log('✅ App data saved successfully');
     } catch (error) {
-      console.error('Error saving app data:', error);
+      console.error('❌ Error saving app data:', error);
     }
   };
 
@@ -311,22 +361,43 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       console.log('🔄 Attempting login...');
       const response: AuthResponse = await authService.login({ email, password });
+      console.log('📡 Login API response user:', {
+        id: response.user.id,
+        name: response.user.name,
+        email: response.user.email,
+        phone: response.user.phone,
+        location: response.user.location,
+        skills: response.user.skills
+      });
       
       // Store token
       await AsyncStorage.setItem('authToken', response.token);
       
-      // Convert API user to app user profile
+      // Load existing user data from AsyncStorage if available
+      let existingUserData = null;
+      try {
+        const storedUser = await AsyncStorage.getItem('user');
+        if (storedUser) {
+          existingUserData = JSON.parse(storedUser);
+          console.log('📱 Found existing user data during login:', existingUserData);
+        }
+      } catch (parseError) {
+        console.log('⚠️ Could not parse existing user data during login');
+      }
+      
+      // Convert API user to app user profile, merging with existing data
       const userProfile: UserProfile = {
         id: response.user.id,
         name: response.user.name,
         email: response.user.email,
-        phone: '',
-        location: '',
-        skills: [],
-        resume: { fileName: '', uploaded: false },
-        profilePicture: { uri: '', uploaded: false },
-        profileCompletion: 50,
-        preferences: {
+        phone: response.user.phone || '',
+        // Use API location first, then fallback to existing local data
+        location: response.user.location || existingUserData?.location || '',
+        skills: response.user.skills || existingUserData?.skills || [],
+        resume: existingUserData?.resume || { fileName: '', uploaded: false },
+        profilePicture: existingUserData?.profilePicture || { uri: '', uploaded: false },
+        profileCompletion: existingUserData?.profileCompletion || 50,
+        preferences: existingUserData?.preferences || {
           role: response.user.role === 'employer' ? 'Hiring Manager' : 'Software Developer',
           location: '',
           type: 'Full-time',
@@ -335,6 +406,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       
       dispatch({ type: 'SET_USER', payload: userProfile });
       console.log('✅ Login successful');
+      console.log('👤 User profile after login:', {
+        name: userProfile.name,
+        phone: userProfile.phone,
+        skills: userProfile.skills,
+        location: userProfile.location
+      });
+      
+      // Note: Removed automatic profile refresh to prevent overwriting local data
+      // The profile will be refreshed when needed by the user
+      
       return { success: true };
     } catch (error) {
       console.error('❌ Login failed:', error);
@@ -492,19 +573,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const updateProfile = async (profile: Partial<UserProfile>) => {
     try {
-      // Update profile via API
-      const updatedProfile = await profileService.updateProfile({
+      console.log('🔄 Updating profile via API:', profile);
+      console.log('🔄 Location in profile data:', profile.location);
+      
+      // Update profile via API - send only fields that exist in the database
+      const apiData = {
         name: profile.name,
         phone: profile.phone,
+        location: profile.location,
         skills: profile.skills,
-      });
+      };
       
-      // Update local state
-      dispatch({ type: 'UPDATE_PROFILE', payload: profile });
+      console.log('🔄 API data being sent:', apiData);
+      const updatedProfile = await profileService.updateProfile(apiData);
+      
+      console.log('✅ Profile updated via API:', updatedProfile);
+      console.log('✅ Location in API response:', updatedProfile.location);
+      
+      // Don't update local state here - let the calling component handle it
+      // This allows the calling component to merge API fields with local fields
     } catch (error) {
       console.error('❌ Failed to update profile:', error);
-      // Still update local state even if API fails
-      dispatch({ type: 'UPDATE_PROFILE', payload: profile });
+      throw error; // Re-throw so calling component can handle the error
     }
   };
 
@@ -556,6 +646,47 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const refreshUserProfile = async () => {
+    try {
+      console.log('🔄 Refreshing user profile from API...');
+      const profileData = await profileService.getProfile();
+      
+      // Merge API data with existing local data
+      const currentUser = state.user;
+      if (currentUser) {
+        console.log('📱 Current user location before refresh:', currentUser.location);
+        console.log('📱 Current user preferences before refresh:', currentUser.preferences);
+        
+        const updatedProfile: UserProfile = {
+          ...currentUser,
+          name: profileData.name,
+          phone: profileData.phone || '',
+          skills: profileData.skills || [],
+          // Keep local-only fields - DO NOT OVERWRITE
+          location: currentUser.location,
+          resume: currentUser.resume,
+          profilePicture: currentUser.profilePicture,
+          profileCompletion: currentUser.profileCompletion,
+          preferences: currentUser.preferences,
+        };
+        
+        console.log('📱 Updated profile location after refresh:', updatedProfile.location);
+        console.log('📱 Updated profile preferences after refresh:', updatedProfile.preferences);
+        
+        dispatch({ type: 'SET_USER', payload: updatedProfile });
+        console.log('✅ User profile refreshed from API');
+        console.log('👤 Updated profile:', {
+          name: updatedProfile.name,
+          phone: updatedProfile.phone,
+          skills: updatedProfile.skills,
+          location: updatedProfile.location
+        });
+      }
+    } catch (error) {
+      console.error('❌ Failed to refresh user profile:', error);
+    }
+  };
+
   const toggleTheme = () => {
     dispatch({ type: 'TOGGLE_THEME' });
   };
@@ -590,6 +721,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     refreshSavedJobs,
     searchJobs,
     getRecommendedJobs,
+    refreshUserProfile,
   };
 
   return (

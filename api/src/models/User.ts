@@ -7,6 +7,7 @@ export interface UserAttributes {
   name: string;
   password: string;
   phone?: string | null;
+  location?: string | null;
   role: 'employee' | 'employer';
   skills?: string[] | null;
   resumeUrl?: string | null;
@@ -25,6 +26,7 @@ export class User extends Model<UserAttributes, UserCreation> implements UserAtt
   declare name: string;
   declare password: string;
   declare phone: string | null;
+  declare location: string | null;
   declare role: 'employee' | 'employer';
   declare skills: string[] | null;
   declare resumeUrl: string | null;
@@ -41,6 +43,7 @@ User.init({
   name: { type: DataTypes.STRING, allowNull: false },
   password: { type: DataTypes.STRING, allowNull: false },
   phone: { type: DataTypes.STRING, allowNull: true },
+  location: { type: DataTypes.STRING, allowNull: true },
   role: { type: DataTypes.ENUM('employee', 'employer'), allowNull: false },
   skills: { type: DataTypes.JSON, allowNull: true },
   resumeUrl: { type: DataTypes.STRING, allowNull: true },

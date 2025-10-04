@@ -216,6 +216,7 @@ export interface AppContextType {
   refreshApplications: () => Promise<void>;
   refreshNotifications: () => Promise<void>;
   refreshSavedJobs: () => Promise<void>;
+  refreshUserProfile: () => Promise<void>;
   searchJobs: (query: string, filters?: any) => Promise<Job[]>;
   getRecommendedJobs: () => Promise<Job[]>;
 }

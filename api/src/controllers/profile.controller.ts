@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import multer from 'multer';
 import path from 'path';
-import { User } from '../models';
+import { User, sequelize } from '../models';
 import { AuthRequest } from '../middleware/auth';
 
 const storage = multer.diskStorage({
@@ -24,12 +24,26 @@ export async function getProfile(req: Request, res: Response, next: NextFunction
     const userId = (req as AuthRequest).user?.id;
     if (!userId) return res.status(401).json({ message: 'Unauthorized' });
 
+    console.log(`🔍 Profile get request for user: ${userId}`);
+
     const user = await User.findByPk(userId);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
+    console.log(`👤 Retrieved user data:`, {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      skills: user.skills,
+      updatedAt: user.updatedAt
+    });
+
     const { password, ...profile } = user.toJSON();
     res.json(profile);
-  } catch (e) { next(e); }
+  } catch (e) { 
+    console.error('Get profile error:', e);
+    next(e); 
+  }
 }
 
 export async function updateProfile(req: Request, res: Response, next: NextFunction) {
@@ -37,15 +51,56 @@ export async function updateProfile(req: Request, res: Response, next: NextFunct
     const userId = (req as AuthRequest).user?.id;
     if (!userId) return res.status(401).json({ message: 'Unauthorized' });
 
+    console.log(`🔍 Profile update request for user: ${userId}`);
+    console.log(`📝 Update data:`, req.body);
+
     const user = await User.findByPk(userId);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    const { password, ...updateData } = req.body;
-    await user.update(updateData);
+    console.log(`👤 Current user data:`, {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      location: user.location,
+      skills: user.skills
+    });
 
-    const { password: _, ...profile } = user.toJSON();
-    res.json(profile);
-  } catch (e) { next(e); }
+    const { password, ...updateData } = req.body;
+    
+    // Use transaction to ensure data persistence
+    const transaction = await sequelize.transaction();
+    
+    try {
+      console.log(`💾 Updating user with data:`, updateData);
+      await user.update(updateData, { transaction });
+      await transaction.commit();
+      
+      console.log(`✅ Transaction committed successfully`);
+      
+      // Reload user to get updated data
+      await user.reload();
+      
+      console.log(`🔄 User data after reload:`, {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        location: user.location,
+        skills: user.skills
+      });
+      
+      const { password: _, ...profile } = user.toJSON();
+      res.json(profile);
+    } catch (updateError) {
+      console.error(`❌ Update transaction failed:`, updateError);
+      await transaction.rollback();
+      throw updateError;
+    }
+  } catch (e) { 
+    console.error('Profile update error:', e);
+    next(e); 
+  }
 }
 
 export async function uploadResumeHandler(req: Request, res: Response, next: NextFunction) {
@@ -61,10 +116,23 @@ export async function uploadResumeHandler(req: Request, res: Response, next: Nex
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     const resumeUrl = `/uploads/${req.file.filename}`;
-    await user.update({ resumeUrl });
-
-    res.json({ message: 'Resume uploaded successfully', resumeUrl });
-  } catch (e) { next(e); }
+    
+    // Use transaction to ensure data persistence
+    const transaction = await sequelize.transaction();
+    
+    try {
+      await user.update({ resumeUrl }, { transaction });
+      await transaction.commit();
+      
+      res.json({ message: 'Resume uploaded successfully', resumeUrl });
+    } catch (updateError) {
+      await transaction.rollback();
+      throw updateError;
+    }
+  } catch (e) { 
+    console.error('Resume upload error:', e);
+    next(e); 
+  }
 }
 
 export async function uploadAvatarHandler(req: Request, res: Response, next: NextFunction) {
@@ -80,10 +148,23 @@ export async function uploadAvatarHandler(req: Request, res: Response, next: Nex
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     const avatarUrl = `/uploads/${req.file.filename}`;
-    await user.update({ avatarUrl });
-
-    res.json({ message: 'Avatar uploaded successfully', avatarUrl });
-  } catch (e) { next(e); }
+    
+    // Use transaction to ensure data persistence
+    const transaction = await sequelize.transaction();
+    
+    try {
+      await user.update({ avatarUrl }, { transaction });
+      await transaction.commit();
+      
+      res.json({ message: 'Avatar uploaded successfully', avatarUrl });
+    } catch (updateError) {
+      await transaction.rollback();
+      throw updateError;
+    }
+  } catch (e) { 
+    console.error('Avatar upload error:', e);
+    next(e); 
+  }
 }
 
 export async function getSkills(req: Request, res: Response, next: NextFunction) {
@@ -111,7 +192,20 @@ export async function updateSkills(req: Request, res: Response, next: NextFuncti
     const user = await User.findByPk(userId);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    await user.update({ skills });
-    res.json({ skills });
-  } catch (e) { next(e); }
+    // Use transaction to ensure data persistence
+    const transaction = await sequelize.transaction();
+    
+    try {
+      await user.update({ skills }, { transaction });
+      await transaction.commit();
+      
+      res.json({ skills });
+    } catch (updateError) {
+      await transaction.rollback();
+      throw updateError;
+    }
+  } catch (e) { 
+    console.error('Skills update error:', e);
+    next(e); 
+  }
 }
