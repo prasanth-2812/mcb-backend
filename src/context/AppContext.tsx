@@ -10,6 +10,7 @@ import { profileService } from '../services/profileService';
 import { searchService } from '../services/searchService';
 import { companiesService } from '../services/companiesService';
 import { analyticsService } from '../services/analyticsService';
+import { pushNotificationService } from '../services/pushNotificationService';
 
 // Initial state
 const initialState: AppState = {
@@ -152,7 +153,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Load data from AsyncStorage on app start
   useEffect(() => {
     loadAppData();
+    initializePushNotifications();
   }, []);
+
+  const initializePushNotifications = async () => {
+    try {
+      console.log('🔔 Initializing push notifications...');
+      await pushNotificationService.initialize();
+      await pushNotificationService.requestPermissions();
+      console.log('✅ Push notifications initialized');
+    } catch (error) {
+      console.error('❌ Failed to initialize push notifications:', error);
+    }
+  };
 
   // Save data to AsyncStorage whenever state changes (but not during initial load)
   useEffect(() => {

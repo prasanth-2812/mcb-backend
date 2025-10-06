@@ -30,6 +30,7 @@ import { useApp } from '../context/AppContext';
 import { Colors, DarkColors } from '../constants/colors';
 import { Sizes } from '../constants/sizes';
 import { UserProfile } from '../types';
+import { pdfService, ResumePDFData } from '../services/pdfService';
 
 // Resume Builder Data Types
 interface ResumeData {
@@ -112,6 +113,7 @@ const ResumeBuilderScreen: React.FC = () => {
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   
   // Resume data state
   const [resumeData, setResumeData] = useState<ResumeData>({
@@ -269,6 +271,60 @@ const ResumeBuilderScreen: React.FC = () => {
       Alert.alert('Error', 'Failed to save resume. Please try again.');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleGeneratePDF = async () => {
+    setIsGeneratingPDF(true);
+    try {
+      console.log('🔄 Generating PDF resume...');
+      
+      // Convert ResumeData to ResumePDFData
+      const pdfData: ResumePDFData = {
+        personalInfo: resumeData.personalInfo,
+        professionalSummary: resumeData.professionalSummary,
+        experience: resumeData.experience,
+        education: resumeData.education,
+        skills: resumeData.skills,
+        projects: resumeData.projects,
+        certifications: resumeData.certifications
+      };
+
+      const fileName = `Resume_${resumeData.personalInfo.firstName}_${resumeData.personalInfo.lastName}_${Date.now()}.pdf`;
+      const filePath = await pdfService.generatePDF(pdfData, {
+        fileName,
+        width: 595,
+        height: 842,
+        padding: 24
+      });
+
+      console.log('✅ PDF generated successfully:', filePath);
+      
+      // Show success message with options
+      Alert.alert(
+        'PDF Generated Successfully!',
+        'Your resume has been generated as a PDF. What would you like to do?',
+        [
+          {
+            text: 'Share',
+            onPress: () => pdfService.sharePDF(filePath)
+          },
+          {
+            text: 'Save to Gallery',
+            onPress: () => pdfService.saveToGallery(filePath)
+          },
+          {
+            text: 'OK',
+            style: 'default'
+          }
+        ]
+      );
+      
+    } catch (error) {
+      console.error('❌ PDF generation failed:', error);
+      Alert.alert('Error', 'Failed to generate PDF. Please try again.');
+    } finally {
+      setIsGeneratingPDF(false);
     }
   };
 
@@ -992,6 +1048,18 @@ const ResumeBuilderScreen: React.FC = () => {
                     >
                       {isSaving ? 'Saving...' : 'Save Resume'}
                     </Button>
+
+                    <Button
+                      mode="contained"
+                      onPress={handleGeneratePDF}
+                      loading={isGeneratingPDF}
+                      disabled={isGeneratingPDF}
+                      style={[styles.actionButton, styles.primaryActionButton]}
+                      contentStyle={styles.actionButtonContent}
+                      icon="file-pdf-box"
+                    >
+                      {isGeneratingPDF ? 'Generating PDF...' : 'Generate PDF'}
+                    </Button>
                     
                     <Button
                       mode="outlined"
@@ -1592,6 +1660,11 @@ const styles = StyleSheet.create({
   secondaryActionButton: {
     flex: 1,
     marginHorizontal: Sizes.xs,
+  },
+  primaryActionButton: {
+    flex: 1,
+    marginHorizontal: Sizes.xs,
+    backgroundColor: Colors.primary,
   },
   addButton: {
     borderRadius: Sizes.radiusLg,

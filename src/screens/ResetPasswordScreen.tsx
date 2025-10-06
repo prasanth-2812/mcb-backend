@@ -69,7 +69,7 @@ const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({ route }) => {
     try {
       console.log('🔄 Resetting password with token:', token.substring(0, 10) + '...');
       
-      const response = await fetch('http://10.115.43.116:4000/api/auth/reset-password', {
+      const response = await fetch('http://192.168.3.203:4000/api/auth/reset-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

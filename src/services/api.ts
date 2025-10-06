@@ -1,7 +1,8 @@
 // Use network IP for Expo development (works with physical devices and emulators)
-const API_BASE_URL = 'http://10.115.43.116:4000/api';
+const API_BASE_URL = 'http://192.168.3.203:4000/api';
 // Fallback to localhost for web development
 const API_BASE_URL_FALLBACK = 'http://localhost:4000/api';
+
 
 export interface ApiJob {
   id: string;
@@ -200,7 +201,7 @@ class ApiService {
   // Health check
   async healthCheck(): Promise<{ status: string }> {
     // Health endpoint is at root level, not under /api
-    const urls = ['http://10.115.43.116:4000/health', 'http://localhost:4000/health'];
+    const urls = ['http://192.168.3.203:4000/health', 'http://localhost:4000/health'];
     
     for (let i = 0; i < urls.length; i++) {
       const url = urls[i];

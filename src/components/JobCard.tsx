@@ -209,6 +209,55 @@ const JobCard: React.FC<JobCardProps> = ({
             </View>
           </View>
 
+          {/* Job Type and Status Chips */}
+          <View style={styles.jobTypeContainer}>
+            <Chip 
+              style={[styles.jobTypeChip, { backgroundColor: getJobTypeColor(job.type) + '20' }]}
+              textStyle={[styles.jobTypeText, { color: getJobTypeColor(job.type) }]}
+              icon={() => (
+                <MaterialCommunityIcons 
+                  name="briefcase" 
+                  size={14} 
+                  color={getJobTypeColor(job.type)} 
+                />
+              )}
+            >
+              {job.type}
+            </Chip>
+            
+            {job.isRemote && (
+              <Chip 
+                style={[styles.remoteChip, { backgroundColor: '#2196F320' }]}
+                textStyle={[styles.remoteText, { color: '#2196F3' }]}
+                icon={() => (
+                  <MaterialCommunityIcons 
+                    name="home" 
+                    size={14} 
+                    color="#2196F3" 
+                  />
+                )}
+              >
+                Remote
+              </Chip>
+            )}
+            
+            {isSaved && (
+              <Chip 
+                style={[styles.savedChip, { backgroundColor: '#4CAF5020' }]}
+                textStyle={[styles.savedText, { color: '#4CAF50' }]}
+                icon={() => (
+                  <MaterialCommunityIcons 
+                    name="bookmark" 
+                    size={14} 
+                    color="#4CAF50" 
+                  />
+                )}
+              >
+                Saved
+              </Chip>
+            )}
+          </View>
+
           {/* Job Details - Location and Salary */}
           <View style={styles.detailsContainer}>
             <View style={styles.detailRow}>
@@ -351,6 +400,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
+    minHeight: 120,
   },
   header: {
     flexDirection: 'row',
@@ -431,6 +481,36 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: '600',
   },
+  jobTypeContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: 12,
+    gap: 6,
+  },
+  jobTypeChip: {
+    height: 28,
+    borderRadius: 14,
+  },
+  jobTypeText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  remoteChip: {
+    height: 28,
+    borderRadius: 14,
+  },
+  remoteText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  savedChip: {
+    height: 28,
+    borderRadius: 14,
+  },
+  savedText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
   saveButton: {
     margin: 0,
   },
@@ -453,7 +533,8 @@ const styles = StyleSheet.create({
   bottomSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    marginTop: 8,
   },
   actionButtons: {
     flexDirection: 'row',
@@ -490,26 +571,31 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     flex: 1,
     gap: 6,
+    marginRight: 8,
   },
   skillChip: {
     backgroundColor: '#dbeafe',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+    marginBottom: 4,
   },
   skillChipText: {
     color: '#3b82f6',
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: 11,
+    fontWeight: '600',
   },
   moreChip: {
     backgroundColor: '#f3f4f6',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+    marginBottom: 4,
   },
   moreChipText: {
     color: '#6b7280',
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: 11,
+    fontWeight: '600',
   },
   applyButton: {
     borderRadius: 8,

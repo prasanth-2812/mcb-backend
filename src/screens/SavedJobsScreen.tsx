@@ -13,7 +13,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { useApp } from '../context/AppContext';
 import { Colors } from '../constants/colors';
 import { Sizes } from '../constants/sizes';
-import JobCard from '../components/JobCard';
+import SavedJobsCard from '../components/SavedJobsCard';
 import { Job } from '../types';
 
 const SavedJobsScreen: React.FC = () => {
@@ -96,167 +96,14 @@ const SavedJobsScreen: React.FC = () => {
 
   const renderJobItem = ({ item }: { item: Job }) => (
     <Animated.View style={contentAnimatedStyle}>
-      <TouchableOpacity onPress={() => handleJobPress(item)}>
-        <Card style={[
-          styles.jobCard,
-          { backgroundColor: isDark ? Colors.darkGray : Colors.white }
-        ]}>
-          <Card.Content style={styles.jobContent}>
-          <View style={styles.jobHeader}>
-            <View style={styles.jobInfo}>
-              <Text 
-                variant="titleMedium" 
-                style={[
-                  styles.jobTitle,
-                  { color: isDark ? Colors.white : Colors.textPrimary }
-                ]}
-              >
-                {item.title}
-              </Text>
-              <Text 
-                variant="bodyMedium" 
-                style={[
-                  styles.companyName,
-                  { color: isDark ? Colors.gray : Colors.textSecondary }
-                ]}
-              >
-                {item.company}
-              </Text>
-            </View>
-            
-            <View style={styles.jobActions}>
-              <Chip 
-                style={styles.savedChip}
-                textStyle={styles.savedChipText}
-                icon={() => <MaterialCommunityIcons name="bookmark" size={12} color="#1976D2" />}
-              >
-                Saved
-              </Chip>
-              <IconButton
-                icon={() => <MaterialCommunityIcons name="bookmark-remove" size={20} color="#F44336" />}
-                onPress={() => handleRemoveSaved(item.id)}
-                style={styles.removeButton}
-              />
-            </View>
-          </View>
-
-          <View style={styles.jobDetails}>
-            <View style={styles.detailRow}>
-              <MaterialCommunityIcons 
-                name="map-marker" 
-                size={16} 
-                color={isDark ? Colors.gray : Colors.textSecondary} 
-              />
-              <Text 
-                variant="bodySmall" 
-                style={[
-                  styles.detailText,
-                  { color: isDark ? Colors.gray : Colors.textSecondary }
-                ]}
-              >
-                {item.location}
-              </Text>
-            </View>
-
-            <View style={styles.detailRow}>
-              <MaterialCommunityIcons 
-                name="currency-usd" 
-                size={16} 
-                color="#4CAF50" 
-              />
-              <Text 
-                variant="bodySmall" 
-                style={[styles.detailText, styles.salaryText]}
-              >
-                {item.salary}
-              </Text>
-            </View>
-
-            <View style={styles.detailRow}>
-              <MaterialCommunityIcons 
-                name="clock-outline" 
-                size={16} 
-                color={isDark ? Colors.gray : Colors.textSecondary} 
-              />
-              <Text 
-                variant="bodySmall" 
-                style={[
-                  styles.detailText,
-                  { color: isDark ? Colors.gray : Colors.textSecondary }
-                ]}
-              >
-                Posted {formatDate(item.postedDate)}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.jobTags}>
-            <Chip 
-              style={[styles.typeChip, { backgroundColor: getJobTypeColor(item.type) + '20' }]}
-              textStyle={[styles.typeChipText, { color: getJobTypeColor(item.type) }]}
-            >
-              {item.type}
-            </Chip>
-            
-            {item.isRemote && (
-              <Chip 
-                style={styles.remoteChip}
-                textStyle={styles.remoteChipText}
-                icon={() => <MaterialCommunityIcons name="home" size={12} color="#9C27B0" />}
-              >
-                Remote
-              </Chip>
-            )}
-            
-            {item.isUrgent && (
-              <Chip 
-                style={styles.urgentChip}
-                textStyle={styles.urgentChipText}
-                icon={() => <MaterialCommunityIcons name="alert-circle" size={12} color="white" />}
-              >
-                Urgent
-              </Chip>
-            )}
-          </View>
-
-          <View style={styles.jobActions}>
-            <Button
-              mode="outlined"
-              onPress={() => handleJobPress(item)}
-              style={styles.viewButton}
-              textColor="#1976D2"
-            >
-              View Details
-            </Button>
-            <Button
-              mode="contained"
-              onPress={() => handleJobApply(item)}
-              style={styles.applyButton}
-              buttonColor="#1976D2"
-            >
-              Apply Now
-            </Button>
-          </View>
-        </Card.Content>
-      </Card>
-      </TouchableOpacity>
+      <SavedJobsCard
+        job={item}
+        onPress={() => handleJobPress(item)}
+        onApply={() => handleJobApply(item)}
+        onRemove={() => handleRemoveSaved(item.id)}
+      />
     </Animated.View>
   );
-
-  const getJobTypeColor = (type: string): string => {
-    switch (type.toLowerCase()) {
-      case 'full-time':
-        return '#4CAF50';
-      case 'part-time':
-        return '#FF9800';
-      case 'contract':
-        return '#9C27B0';
-      case 'remote':
-        return '#2196F3';
-      default:
-        return '#1976D2';
-    }
-  };
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
@@ -400,114 +247,6 @@ const styles = StyleSheet.create({
   },
   separator: {
     height: 12,
-  },
-  jobCard: {
-    borderRadius: 12,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  jobContent: {
-    padding: 16,
-  },
-  jobHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-  },
-  jobInfo: {
-    flex: 1,
-    marginRight: 12,
-  },
-  jobTitle: {
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  companyName: {
-    opacity: 0.8,
-  },
-  jobActions: {
-    alignItems: 'flex-end',
-  },
-  savedChip: {
-    backgroundColor: '#E3F2FD',
-    marginBottom: 8,
-    height: 24,
-  },
-  savedChipText: {
-    fontSize: 10,
-    color: '#1976D2',
-    fontWeight: '600',
-  },
-  removeButton: {
-    margin: 0,
-  },
-  jobDetails: {
-    marginBottom: 12,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  detailText: {
-    marginLeft: 8,
-    flex: 1,
-  },
-  salaryText: {
-    color: '#4CAF50',
-    fontWeight: '600',
-  },
-  jobTags: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 16,
-  },
-  typeChip: {
-    marginRight: 6,
-    marginBottom: 4,
-    height: 24,
-  },
-  typeChipText: {
-    fontSize: 10,
-    fontWeight: '600',
-  },
-  remoteChip: {
-    backgroundColor: '#E1BEE7',
-    marginRight: 6,
-    marginBottom: 4,
-    height: 24,
-  },
-  remoteChipText: {
-    fontSize: 10,
-    color: '#9C27B0',
-    fontWeight: '600',
-  },
-  urgentChip: {
-    backgroundColor: '#F44336',
-    marginRight: 6,
-    marginBottom: 4,
-    height: 24,
-  },
-  urgentChipText: {
-    fontSize: 10,
-    color: 'white',
-    fontWeight: '600',
-  },
-  jobActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  viewButton: {
-    flex: 1,
-    marginRight: 8,
-    borderColor: '#1976D2',
-  },
-  applyButton: {
-    flex: 1,
   },
   emptyState: {
     flex: 1,

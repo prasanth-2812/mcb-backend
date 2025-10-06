@@ -55,7 +55,7 @@ const ForgotPasswordScreen: React.FC = () => {
     try {
       console.log('🔄 Sending password reset request for:', email);
       
-      const response = await fetch('http://10.115.43.116:4000/api/auth/forgot-password', {
+      const response = await fetch('http://192.168.3.203:4000/api/auth/forgot-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -86,7 +86,7 @@ const ForgotPasswordScreen: React.FC = () => {
     try {
       console.log('🔄 Resending password reset request for:', email);
       
-      const response = await fetch('http://10.115.43.116:4000/api/auth/forgot-password', {
+      const response = await fetch('http://192.168.3.203:4000/api/auth/forgot-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

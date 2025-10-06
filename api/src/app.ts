@@ -16,11 +16,17 @@ const corsOptions = {
   origin: [
     'http://localhost:3000',        // React development server
     'http://localhost:3001',        // Alternative React port
+    'http://localhost:8081',        // Expo development server
+    'http://localhost:8082',        // Expo alternative port
     'http://127.0.0.1:3000',        // Localhost alternative
     'http://127.0.0.1:3001',
-    'http://125.18.84.110:3000',       // Another device IP
-    'http://10.115.43.116:3000',       // Your device IP
-    'http://10.115.43.116:3001'        // Your device IP alternative port
+    'http://127.0.0.1:8081',
+    'http://192.168.3.203:3000',    // Current network IP
+    'http://192.168.3.203:8081',    // Expo on network IP
+    'http://192.168.3.203:8082',    // Expo alternative on network IP
+    'http://10.115.43.116:3000',    // Previous device IP
+    'http://10.115.43.116:3001',    // Previous device IP alternative port
+    'http://125.18.84.110:3000'     // Another device IP
     // Add your production frontend URLs here
     // 'https://yourdomain.com',
     // 'https://www.yourdomain.com'

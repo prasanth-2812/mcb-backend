@@ -1,5 +1,5 @@
 // Analytics service for handling analytics API calls
-const API_BASE_URL = 'http://10.115.43.116:4000/api';
+const API_BASE_URL = 'http://192.168.3.203:4000/api';
 const API_BASE_URL_FALLBACK = 'http://localhost:4000/api';
 
 export interface ApplicationStats {

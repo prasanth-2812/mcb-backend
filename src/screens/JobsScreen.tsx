@@ -11,6 +11,7 @@ import SearchBar from '../components/SearchBar';
 import FilterJobsModal from '../components/FilterJobsModal';
 import { Job, FilterOptions } from '../types';
 import jobApplicationService from '../services/jobApplicationService';
+import { realJobDataService, JobSearchParams } from '../services/realJobDataService';
 import toast from '../services/toastService';
 // Removed static jobs data - using API only
 
@@ -38,6 +39,10 @@ const JobsScreen: React.FC<JobsScreenProps> = ({ navigation }) => {
     companySize: [],
   });
   const [showUrgentOnly, setShowUrgentOnly] = useState(false);
+  const [realJobs, setRealJobs] = useState<Job[]>([]);
+  const [useRealData, setUseRealData] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [hasMoreJobs, setHasMoreJobs] = useState(true);
 
   useEffect(() => {
     // Check for pending job application after login

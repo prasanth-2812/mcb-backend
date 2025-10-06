@@ -6,8 +6,9 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as Font from 'expo-font';
 import { AppProvider } from './src/context/AppContext';
-import { ThemeProvider, useTheme } from './src/context/ThemeContext';
+import { EnhancedThemeProvider, useTheme } from './src/context/EnhancedThemeContext';
 import AppNavigator from './src/navigation/AppNavigator';
+import ErrorBoundary from './src/components/ErrorBoundary';
 
 const AppContent: React.FC = () => {
   const { theme, isDark } = useTheme();
@@ -48,15 +49,17 @@ const App: React.FC = () => {
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <ThemeProvider>
-          <AppProvider>
-            <AppContent />
-          </AppProvider>
-        </ThemeProvider>
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
+    <ErrorBoundary>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaProvider>
+          <EnhancedThemeProvider>
+            <AppProvider>
+              <AppContent />
+            </AppProvider>
+          </EnhancedThemeProvider>
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
+    </ErrorBoundary>
   );
 };
 

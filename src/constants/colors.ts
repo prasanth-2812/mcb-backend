@@ -59,59 +59,90 @@ export const Colors = {
 
 export const DarkColors = {
   // Primary colors
-  primary: '#6BB6FF',
-  primaryLight: '#9FC7FF',
-  primaryDark: '#1A365D',
+  primary: '#58A6FF',
+  primaryLight: '#79C0FF',
+  primaryDark: '#1F6FEB',
   
   // Secondary colors
-  secondary: '#7ED321',
-  secondaryLight: '#A4E85C',
-  secondaryDark: '#2D5016',
+  secondary: '#3FB950',
+  secondaryLight: '#56D364',
+  secondaryDark: '#238636',
   
   // Accent colors
-  accent: '#FF8A80',
-  accentLight: '#FFB3B3',
-  accentDark: '#D32F2F',
+  accent: '#F85149',
+  accentLight: '#FF7B72',
+  accentDark: '#DA3633',
   
   // Neutral colors
-  white: '#FFFFFF',
+  white: '#F0F6FC',
   black: '#000000',
-  gray: '#CCCCCC',
-  lightGray: '#2A2A2A',
-  darkGray: '#1A1A1A',
+  gray: '#8B949E',
+  lightGray: '#484F58',
+  darkGray: '#0D1117',
   
   // Status colors
-  success: '#66BB6A',
-  warning: '#FFB74D',
-  error: '#EF5350',
-  info: '#42A5F5',
+  success: '#3FB950',
+  warning: '#D29922',
+  error: '#F85149',
+  info: '#58A6FF',
   
   // Background colors
-  background: '#121212',
-  surface: '#1A1A1A',
-  surfaceVariant: '#2A2A2A',
+  background: '#0D1117',
+  surface: '#161B22',
+  surfaceVariant: '#21262D',
   
   // Text colors
-  textPrimary: '#FFFFFF',
-  textSecondary: '#CCCCCC',
-  textDisabled: '#666666',
+  text: '#F0F6FC',
+  textPrimary: '#F0F6FC',
+  textSecondary: '#8B949E',
+  textTertiary: '#6E7681',
+  textDisabled: '#484F58',
   
   // Border colors
-  border: '#404040',
-  borderLight: '#2A2A2A',
+  border: '#30363D',
+  borderLight: '#21262D',
   
   // Shadow colors
-  shadow: 'rgba(0, 0, 0, 0.3)',
-  shadowDark: 'rgba(0, 0, 0, 0.5)',
+  shadow: 'rgba(0, 0, 0, 0.4)',
+  shadowDark: 'rgba(0, 0, 0, 0.6)',
   
   // Gradient colors
-  gradientStart: '#6BB6FF',
-  gradientEnd: '#7ED321',
+  gradientStart: '#58A6FF',
+  gradientEnd: '#3FB950',
   
   // Application status colors
-  applied: '#42A5F5',
-  shortlisted: '#FFB74D',
-  interview: '#BA68C8',
-  rejected: '#EF5350',
-  offered: '#66BB6A',
+  applied: '#58A6FF',
+  shortlisted: '#D29922',
+  interview: '#A855F7',
+  rejected: '#F85149',
+  offered: '#3FB950',
+  
+  // Additional dark mode colors
+  card: '#161B22',
+  input: '#0D1117',
+  button: '#238636',
+  buttonText: '#F0F6FC',
+  link: '#58A6FF',
+  overlay: 'rgba(0, 0, 0, 0.85)',
+  placeholder: '#6E7681',
+  
+  // GitHub-inspired colors
+  headerBg: '#161B22',
+  sidebarBg: '#0D1117',
+  searchBg: '#0D1117',
+  searchBorder: '#30363D',
+  tabBg: '#21262D',
+  tabActive: '#F0F6FC',
+  tabInactive: '#8B949E',
+  
+  // Priority colors
+  high: '#F85149',
+  medium: '#D29922',
+  low: '#3FB950',
+  
+  // Job status colors
+  pending: '#8B949E',
+  inProgress: '#D29922',
+  completed: '#3FB950',
+  cancelled: '#F85149',
 };
