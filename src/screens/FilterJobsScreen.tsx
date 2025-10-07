@@ -21,7 +21,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useApp } from '../context/AppContext';
 import { FilterOptions, Job } from '../types';
-import jobsData from '../data/jobs.json';
+// import jobsData from '../data/jobs.json';
 
 const { width: screenWidth } = Dimensions.get('window');
 

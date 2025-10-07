@@ -9,7 +9,6 @@ import {
   Divider,
   List,
   IconButton,
-  TimePickerModal,
   Portal
 } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';

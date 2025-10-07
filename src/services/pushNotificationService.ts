@@ -1,5 +1,5 @@
 // Push Notification Service
-import PushNotification from 'react-native-push-notification';
+// import PushNotification from 'react-native-push-notification';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 

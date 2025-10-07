@@ -8,7 +8,10 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "dev:sqlite": "ts-node-dev --poll --respawn --transpile-only src/server.ts",
-    "start:sqlite": "node dist/server.js"
+    "start:sqlite": "node dist/server.js",
+    "init-mysql": "ts-node src/scripts/init-mysql-db.ts",
+    "dev:mysql": "ts-node-dev --poll --respawn --transpile-only src/server.ts",
+    "start:mysql": "node dist/server.js"
   },
   "keywords": [],
   "author": "",
