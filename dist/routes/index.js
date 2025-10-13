@@ -1,0 +1,31 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const auth_1 = __importDefault(require("./auth"));
+const users_1 = __importDefault(require("./users"));
+const jobs_1 = __importDefault(require("./jobs"));
+const candidates_1 = __importDefault(require("./candidates"));
+const applications_1 = __importDefault(require("./applications"));
+const savedJobs_1 = __importDefault(require("./savedJobs"));
+const notifications_1 = __importDefault(require("./notifications"));
+const profile_1 = __importDefault(require("./profile"));
+const search_1 = __importDefault(require("./search"));
+const companies_1 = __importDefault(require("./companies"));
+const analytics_1 = __importDefault(require("./analytics"));
+const router = (0, express_1.Router)();
+router.use('/auth', auth_1.default);
+router.use('/users', users_1.default);
+router.use('/jobs', jobs_1.default);
+router.use('/candidates', candidates_1.default);
+router.use('/applications', applications_1.default);
+router.use('/saved-jobs', savedJobs_1.default);
+router.use('/notifications', notifications_1.default);
+router.use('/profile', profile_1.default);
+router.use('/search', search_1.default);
+router.use('/companies', companies_1.default);
+router.use('/analytics', analytics_1.default);
+exports.default = router;
+//# sourceMappingURL=index.js.map
